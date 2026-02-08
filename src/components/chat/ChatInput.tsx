@@ -1,20 +1,10 @@
-import { useState, useRef } from "react";
-import { Send, Plus, Loader2, Camera, Mic, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Send, Plus, Loader2, Mic, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-
-const MENU_ITEMS = [
-  { icon: "🌱", label: "Доброградка", prompt: "Я Доброградка — твой садовый помощник. Подскажу что сажать в твоём регионе! Напиши свой город или регион." },
-  { icon: "⚖️", label: "Юрист", prompt: "Я юрист. Чем могу помочь?" },
-  { icon: "🩺", label: "Врач", prompt: "Я врач. Опишите симптомы." },
-  { icon: "🧠", label: "Психолог", prompt: "Я психолог. Расскажите, что вас беспокоит." },
-  { icon: "💰", label: "Финансы", prompt: "Я финансовый консультант. Какой у вас вопрос?" },
-  { icon: "👗", label: "Стилист", prompt: "Я стилист Лиза. Помогу с образом!" },
-  { icon: "🛡️", label: "Безопасность", prompt: "Я эксперт по безопасности. Чем помочь?" },
-  { icon: "🐕", label: "Ветеринар", prompt: "Я ветеринар. Расскажите о питомце." },
-  { icon: "💪", label: "ЗОЖ", prompt: "Я тренер по здоровому образу жизни. Чем помочь?" },
-];
+import { TemplatesModal } from "./TemplatesModal";
+import { useSearchParams } from "react-router-dom";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -22,6 +12,7 @@ interface ChatInputProps {
   onImageSelect?: (file: File, url: string) => void;
   uploadedPhotoUrl?: string;
   onClearPhoto?: () => void;
+  initialPrompt?: string;
 }
 
 export function ChatInput({ 
@@ -30,11 +21,19 @@ export function ChatInput({
   onImageSelect,
   uploadedPhotoUrl,
   onClearPhoto,
+  initialPrompt,
 }: ChatInputProps) {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(initialPrompt || "");
   const [showMenu, setShowMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isRecording, duration, startRecording, stopRecording, cancelRecording } = useVoiceRecorder();
+
+  // Set initial prompt when it changes
+  useEffect(() => {
+    if (initialPrompt) {
+      setMessage(initialPrompt);
+    }
+  }, [initialPrompt]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -50,9 +49,8 @@ export function ChatInput({
     }
   };
 
-  const handleMenuItemClick = (prompt: string) => {
-    onSend(prompt);
-    setShowMenu(false);
+  const handleSelectTemplate = (prompt: string) => {
+    setMessage(prompt);
   };
 
   const handlePhotoClick = () => {
@@ -80,56 +78,14 @@ export function ChatInput({
         className="hidden"
       />
 
-      {/* Menu Modal */}
-      <AnimatePresence>
-        {showMenu && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
-            onClick={() => setShowMenu(false)}
-          >
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="absolute bottom-0 left-0 right-0 glass-card rounded-t-3xl p-4 max-h-[50vh] overflow-y-auto"
-            >
-              <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-3" />
-              
-              {/* Photo button */}
-              {onImageSelect && (
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handlePhotoClick}
-                  className="w-full flex items-center gap-3 p-3 glass rounded-xl hover:bg-primary/10 transition-colors mb-2"
-                >
-                  <Camera className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-medium text-foreground">Загрузить фото</span>
-                </motion.button>
-              )}
-
-              {/* Experts grid */}
-              <div className="grid grid-cols-2 gap-2">
-                {MENU_ITEMS.map((item) => (
-                  <motion.button
-                    key={item.label}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleMenuItemClick(item.prompt)}
-                    className="flex items-center gap-2 p-3 glass rounded-xl hover:bg-primary/10 transition-colors text-left"
-                  >
-                    <span className="text-lg">{item.icon}</span>
-                    <span className="text-sm text-foreground">{item.label}</span>
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Templates Modal */}
+      <TemplatesModal
+        isOpen={showMenu}
+        onClose={() => setShowMenu(false)}
+        onSelectTemplate={handleSelectTemplate}
+        onPhotoClick={onImageSelect ? handlePhotoClick : undefined}
+        showPhotoButton={!!onImageSelect}
+      />
 
       {/* Uploaded photo preview */}
       {uploadedPhotoUrl && (

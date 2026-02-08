@@ -3,7 +3,7 @@ import { Heart, Share2, Volume2, VolumeX } from "lucide-react";
 import { FeedItem } from "@/data/mockData";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
-
+import { FeedCardActions } from "./FeedCardActions";
 interface FeedCardProps {
   item: FeedItem;
   isActive: boolean;
@@ -143,6 +143,13 @@ export function FeedCard({ item, isActive }: FeedCardProps) {
             </span>
           </motion.div>
         )}
+
+        {/* Action buttons - Ask AI & Book Expert */}
+        <FeedCardActions 
+          isActive={isActive} 
+          title={item.title} 
+          tags={item.tags} 
+        />
       </div>
 
       {/* Minimal right side actions - only Like and Share */}
