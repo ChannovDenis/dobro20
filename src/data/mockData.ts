@@ -22,6 +22,7 @@ export interface FeedItem {
   title: string;
   description: string;
   image: string;
+  video?: string; // Optional video URL
   tags: string[];
   author?: string;
   authorAvatar?: string;
@@ -89,6 +90,7 @@ export const feedItems: FeedItem[] = [
     title: "5 простых упражнений для бодрого утра",
     description: "Начни день правильно! Эти упражнения займут всего 10 минут, но дадут заряд энергии на весь день",
     image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&h=1400&fit=crop",
+    video: "https://videos.pexels.com/video-files/4536530/4536530-uhd_1440_2732_25fps.mp4",
     tags: ["ЗОЖ", "Фитнес"],
     author: "Алексей Фитнес",
     authorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
@@ -141,6 +143,7 @@ export const feedItems: FeedItem[] = [
     title: "Техника дыхания для снятия стресса",
     description: "Попробуй прямо сейчас: 4 вдоха, 7 задержка, 8 выдох",
     image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&h=1400&fit=crop",
+    video: "https://videos.pexels.com/video-files/3571264/3571264-uhd_1440_2560_30fps.mp4",
     tags: ["Психология", "Медитация"],
     author: "Психолог Елена",
     authorAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop",
@@ -181,6 +184,7 @@ export const feedItems: FeedItem[] = [
     title: "Утренняя йога за 15 минут",
     description: "Простой комплекс для гибкости и бодрости. Подходит для начинающих",
     image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=1400&fit=crop",
+    video: "https://videos.pexels.com/video-files/3209828/3209828-uhd_1440_2560_25fps.mp4",
     tags: ["Йога", "ЗОЖ"],
     author: "Инструктор Анна",
     authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
@@ -194,6 +198,7 @@ export const feedItems: FeedItem[] = [
     title: "Как ухаживать за кошкой зимой",
     description: "Советы ветеринара: питание, уход за шерстью и защита от холода",
     image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&h=1400&fit=crop",
+    video: "https://videos.pexels.com/video-files/855282/855282-hd_1920_1080_30fps.mp4",
     tags: ["Питомцы", "Советы"],
     author: "Ветеринар Ольга",
     authorAvatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop",

@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Share2, Bookmark, ChevronUp } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark, ChevronUp, Volume2, VolumeX } from "lucide-react";
 import { FeedItem } from "@/data/mockData";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface FeedCardProps {
   item: FeedItem;
@@ -18,23 +18,83 @@ function formatNumber(num: number): string {
 export function FeedCard({ item, isActive }: FeedCardProps) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Handle video autoplay based on active state
+  useEffect(() => {
+    if (!videoRef.current || !item.video) return;
+    
+    if (isActive) {
+      videoRef.current.play().catch(() => {
+        // Autoplay failed, likely due to browser policy
+        console.log("Autoplay prevented");
+      });
+    } else {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }, [isActive, item.video]);
+
+  const hasVideo = !!item.video;
 
   return (
     <div className="relative h-[100dvh] w-full snap-start snap-always flex-shrink-0">
-      {/* Background Image */}
+      {/* Background Media */}
       <div className="absolute inset-0">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="w-full h-full object-cover"
-        />
+        {hasVideo ? (
+          <video
+            ref={videoRef}
+            src={item.video}
+            poster={item.image}
+            loop
+            muted={muted}
+            playsInline
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            src={item.image}
+            alt={item.title}
+            className="w-full h-full object-cover"
+          />
+        )}
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-transparent h-32" />
       </div>
 
+      {/* Video mute toggle */}
+      {hasVideo && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={isActive ? { opacity: 1 } : { opacity: 0 }}
+          onClick={() => setMuted(!muted)}
+          className="absolute top-20 right-4 p-3 rounded-full glass z-10"
+        >
+          {muted ? (
+            <VolumeX className="w-5 h-5 text-foreground" />
+          ) : (
+            <Volume2 className="w-5 h-5 text-foreground" />
+          )}
+        </motion.button>
+      )}
+
       {/* Content overlay */}
       <div className="absolute inset-0 flex flex-col justify-end pb-24 px-4">
+        {/* Video indicator */}
+        {hasVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={isActive ? { opacity: 1 } : { opacity: 0 }}
+            className="absolute top-20 left-4"
+          >
+            <span className="px-2 py-1 text-xs font-bold rounded glass text-primary">
+              ВИДЕО
+            </span>
+          </motion.div>
+        )}
+
         {/* Tags */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -98,7 +158,7 @@ export function FeedCard({ item, isActive }: FeedCardProps) {
           onClick={() => setLiked(!liked)}
           className="flex flex-col items-center gap-1"
         >
-          <div className={`p-3 rounded-full glass ${liked ? "text-red-500" : "text-foreground"}`}>
+          <div className={`p-3 rounded-full glass ${liked ? "text-destructive" : "text-foreground"}`}>
             <Heart className={`w-6 h-6 ${liked ? "fill-current" : ""}`} />
           </div>
           <span className="text-xs font-medium text-foreground">
