@@ -1,11 +1,10 @@
-import { Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, Bot } from "lucide-react";
-
 export interface Service {
   id: string;
   name: string;
   icon: string;
   color: string;
   description: string;
+  aiEnabled?: boolean;
 }
 
 export interface MiniApp {
@@ -22,14 +21,13 @@ export interface FeedItem {
   title: string;
   description: string;
   image: string;
-  video?: string; // Optional video URL
+  video?: string;
   tags: string[];
   author?: string;
   authorAvatar?: string;
   likes: number;
   comments: number;
   shares: number;
-  // For promo types
   serviceId?: string;
   miniAppId?: string;
   ctaText?: string;
@@ -69,17 +67,23 @@ export interface UserProfile {
   subscriptionActive: boolean;
 }
 
+// Все услуги Добросервиса
 export const services: Service[] = [
-  { id: "garden", name: "Доброградка", icon: "Sprout", color: "garden", description: "Сезонные советы для сада и огорода" },
+  // AI-сервисы
+  { id: "assistant", name: "AI Ассистент", icon: "Bot", color: "assistant", description: "Универсальный AI-помощник по любым вопросам", aiEnabled: true },
+  { id: "stylist", name: "AI Стилист", icon: "Sparkles", color: "style", description: "Персональный подбор стиля и гардероба", aiEnabled: true },
+  { id: "garden", name: "Доброградка", icon: "Sprout", color: "garden", description: "Сезонные советы для сада и огорода", aiEnabled: true },
+  
+  // Консультации с экспертами
   { id: "lawyer", name: "Юрист", icon: "Scale", color: "legal", description: "Консультации по любым юридическим вопросам" },
-  { id: "doctor", name: "Врач", icon: "Heart", color: "health", description: "Медицинские консультации онлайн" },
+  { id: "doctor", name: "Врач", icon: "Stethoscope", color: "health", description: "Медицинские консультации онлайн" },
   { id: "psychologist", name: "Психолог", icon: "Brain", color: "psychology", description: "Поддержка ментального здоровья" },
-  { id: "finance", name: "Финансы", icon: "Wallet", color: "finance", description: "Планирование бюджета и инвестиций" },
-  { id: "wellness", name: "ЗОЖ", icon: "Dumbbell", color: "wellness", description: "Здоровый образ жизни и питание" },
-  { id: "security", name: "Антимошенник", icon: "Shield", color: "security", description: "Защита от мошенников" },
-  { id: "vet", name: "Ветеринар", icon: "Dog", color: "vet", description: "Консультации для питомцев" },
-  { id: "stylist", name: "AI-стилист", icon: "Sparkles", color: "style", description: "Подбор стиля с помощью AI" },
-  { id: "assistant", name: "Ассистент", icon: "Bot", color: "assistant", description: "Универсальный AI-помощник" },
+  { id: "finance", name: "Финансы", icon: "TrendingUp", color: "finance", description: "Планирование бюджета и инвестиций" },
+  { id: "wellness", name: "ЗОЖ", icon: "Heart", color: "wellness", description: "Здоровый образ жизни и питание" },
+  { id: "security", name: "Антимошенник", icon: "ShieldCheck", color: "security", description: "Защита от мошенников и проверка" },
+  { id: "vet", name: "Ветеринар", icon: "PawPrint", color: "vet", description: "Консультации для питомцев" },
+  { id: "realtor", name: "Недвижимость", icon: "Home", color: "legal", description: "Помощь с покупкой и арендой жилья" },
+  { id: "beauty", name: "Красота", icon: "Palette", color: "style", description: "Советы по уходу и косметологии" },
 ];
 
 export const miniApps: MiniApp[] = [
