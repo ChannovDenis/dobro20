@@ -64,6 +64,7 @@ export interface UserProfile {
 }
 
 export const services: Service[] = [
+  { id: "garden", name: "Доброградка", icon: "Sprout", color: "garden", description: "Сезонные советы для сада и огорода" },
   { id: "lawyer", name: "Юрист", icon: "Scale", color: "legal", description: "Консультации по любым юридическим вопросам" },
   { id: "doctor", name: "Врач", icon: "Heart", color: "health", description: "Медицинские консультации онлайн" },
   { id: "psychologist", name: "Психолог", icon: "Brain", color: "psychology", description: "Поддержка ментального здоровья" },
@@ -84,6 +85,59 @@ export const miniApps: MiniApp[] = [
 
 // TikTok-style feed items with full-screen vertical images
 export const feedItems: FeedItem[] = [
+  // Садовые лайфхаки — сезонный контент
+  {
+    id: "garden-1",
+    type: "content",
+    title: "Февраль: пора сеять томаты на рассаду",
+    description: "Ранние сорта пора готовить уже сейчас! Рассказываем какие семена выбрать и как подготовить грунт для крепкой рассады",
+    image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&h=1400&fit=crop",
+    tags: ["Сад", "Рассада"],
+    author: "Садовод Марина",
+    authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
+    likes: 8400,
+    comments: 234,
+    shares: 1567,
+  },
+  {
+    id: "garden-2",
+    type: "content",
+    title: "5 секретов крепкой рассады перца",
+    description: "Как вырастить здоровую рассаду перца на подоконнике: правильный свет, полив и температура",
+    image: "https://images.unsplash.com/photo-1592921870789-04563d55041c?w=800&h=1400&fit=crop",
+    tags: ["Сад", "Перец"],
+    author: "Агроном Павел",
+    authorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
+    likes: 5200,
+    comments: 189,
+    shares: 892,
+  },
+  {
+    id: "garden-3",
+    type: "content",
+    title: "Подготовка семян: замачивание и проращивание",
+    description: "Простые способы пробудить семена и ускорить всхожесть. Делаем правильно с первого раза",
+    image: "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800&h=1400&fit=crop",
+    tags: ["Сад", "Семена"],
+    author: "Садовод Марина",
+    authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
+    likes: 6100,
+    comments: 156,
+    shares: 723,
+  },
+  {
+    id: "garden-promo",
+    type: "service-promo",
+    title: "AI-Доброградка: твой садовый помощник",
+    description: "Узнай что сажать в твоём регионе прямо сейчас. Персональные советы и ссылки на товары",
+    image: "https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=800&h=1400&fit=crop",
+    tags: ["Сервис", "Сад"],
+    serviceId: "garden",
+    ctaText: "Спросить Доброградку",
+    likes: 0,
+    comments: 0,
+    shares: 0,
+  },
   {
     id: "1",
     type: "content",
@@ -237,7 +291,7 @@ export const feedItems: FeedItem[] = [
     type: "content",
     title: "Что делать при ДТП: пошаговая инструкция",
     description: "Сохрани, чтобы не растеряться в экстренной ситуации",
-    image: "https://images.unsplash.com/photo-1449965408869-ebd3fee56fd1?w=800&h=1400&fit=crop",
+    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=1400&fit=crop",
     tags: ["Право", "Инструкция"],
     author: "Автоюрист Сергей",
     authorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",

@@ -4,7 +4,7 @@ import {
   Scale, Heart, Brain, Wallet, Dumbbell, Shield, 
   Dog, Sparkles, FileText, Calculator, Bot, Settings,
   ChevronRight, Crown, Bell, Gift, TrendingUp, Zap,
-  CreditCard, QrCode, Percent, Star, ArrowRight, X
+  CreditCard, QrCode, Percent, Star, ArrowRight, X, Sprout
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, FileText, Calculator, Bot, Settings,
+  Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, FileText, Calculator, Bot, Settings, Sprout,
 };
 
 // Featured promotions (business value)
@@ -46,6 +46,7 @@ const quickActions = [
 
 // Service categories
 const categories = [
+  { id: "seasonal", label: "🌱 Сезонное", services: ["garden"] },
   { id: "popular", label: "Популярное", services: ["lawyer", "doctor", "psychologist"] },
   { id: "finance", label: "Финансы", services: ["finance", "security"] },
   { id: "lifestyle", label: "Образ жизни", services: ["wellness", "stylist", "vet"] },
