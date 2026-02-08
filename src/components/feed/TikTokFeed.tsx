@@ -25,7 +25,7 @@ export function TikTokFeed() {
   return (
     <div
       ref={containerRef}
-      className="h-[100dvh] overflow-y-scroll snap-y snap-mandatory no-scrollbar"
+      className="h-[100dvh] pb-20 overflow-y-scroll snap-y snap-mandatory no-scrollbar"
     >
       {feedItems.map((item, index) => {
         const isPromo = item.type === "service-promo" || item.type === "miniapp-promo";
