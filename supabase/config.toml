@@ -2,3 +2,12 @@ project_id = "tjximrjleinvvczdzotr"
 
 [functions.chat]
 verify_jwt = false
+
+[functions.lisa-stylist]
+verify_jwt = false
+
+[functions.colortype-analyzer]
+verify_jwt = false
+
+[functions.virtual-tryon]
+verify_jwt = false

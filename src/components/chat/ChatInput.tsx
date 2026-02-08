@@ -1,15 +1,25 @@
 import { useState } from "react";
-import { Send, Plus, Loader2 } from "lucide-react";
+import { Send, Plus, Loader2, Camera } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { chatTemplates } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
+import { ImageUploader } from "./ImageUploader";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   isLoading?: boolean;
+  onImageSelect?: (file: File, url: string) => void;
+  uploadedPhotoUrl?: string;
+  onClearPhoto?: () => void;
 }
 
-export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
+export function ChatInput({ 
+  onSend, 
+  isLoading = false, 
+  onImageSelect,
+  uploadedPhotoUrl,
+  onClearPhoto,
+}: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [showTemplates, setShowTemplates] = useState(false);
 
@@ -66,6 +76,17 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
         )}
       </AnimatePresence>
 
+      {/* Uploaded photo preview */}
+      {uploadedPhotoUrl && (
+        <div className="fixed bottom-32 left-4 z-30">
+          <ImageUploader
+            onImageSelect={() => {}}
+            previewUrl={uploadedPhotoUrl}
+            onClear={onClearPhoto}
+          />
+        </div>
+      )}
+
       {/* Input Form */}
       <form
         onSubmit={handleSubmit}
@@ -81,6 +102,10 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
           >
             <Plus className="w-5 h-5" />
           </Button>
+
+          {onImageSelect && (
+            <ImageUploader onImageSelect={onImageSelect} compact />
+          )}
           
           <input
             type="text"
