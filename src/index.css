@@ -52,6 +52,7 @@
     --category-vet: 25 95% 53%;
     --category-style: 328 86% 70%;
     --category-assistant: 199 89% 48%;
+    --category-garden: 142 71% 45%;
 
     /* Glass effect */
     --glass-bg: 222 47% 14% / 0.6;
@@ -115,6 +116,7 @@
   .bg-category-vet { background: hsl(var(--category-vet) / 0.2); }
   .bg-category-style { background: hsl(var(--category-style) / 0.2); }
   .bg-category-assistant { background: hsl(var(--category-assistant) / 0.2); }
+  .bg-category-garden { background: hsl(var(--category-garden) / 0.2); }
   .bg-category-muted { background: hsl(var(--muted) / 0.3); }
 
   /* Text category colors */
@@ -127,6 +129,7 @@
   .text-category-vet { color: hsl(var(--category-vet)); }
   .text-category-style { color: hsl(var(--category-style)); }
   .text-category-assistant { color: hsl(var(--category-assistant)); }
+  .text-category-garden { color: hsl(var(--category-garden)); }
   .text-category-muted { color: hsl(var(--muted-foreground)); }
 
   /* Safe area padding for mobile */
