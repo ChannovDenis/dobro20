@@ -10,6 +10,7 @@ import Chat from "./pages/Chat";
 import Services from "./pages/Services";
 import Settings from "./pages/Settings";
 import ServiceDetail from "./pages/ServiceDetail";
+import ExpertDetail from "./pages/ExpertDetail";
 import MiniApp from "./pages/MiniApp";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/services" element={<Services />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/service/:id" element={<ServiceDetail />} />
+            <Route path="/service/:id/expert/:expertId" element={<ExpertDetail />} />
             <Route path="/mini-app/:id" element={<MiniApp />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

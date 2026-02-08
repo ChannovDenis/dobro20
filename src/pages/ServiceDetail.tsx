@@ -1,22 +1,45 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Clock, Calendar } from "lucide-react";
+import { ArrowLeft, Star, Clock, Calendar, Briefcase, MessageSquare } from "lucide-react";
 import { Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, Bot, Sprout } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { services, experts } from "@/data/mockData";
+import { services, experts, Expert } from "@/data/mockData";
 import { cn } from "@/lib/utils";
+import { useState, useMemo } from "react";
 
 const iconMap: Record<string, React.ElementType> = {
   Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, Bot, Sprout,
 };
 
+type FilterType = "all" | "online" | "top";
+
+const FILTERS: { id: FilterType; label: string }[] = [
+  { id: "all", label: "Все" },
+  { id: "online", label: "Онлайн" },
+  { id: "top", label: "Топ рейтинг" },
+];
+
 export default function ServiceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
   const service = services.find(s => s.id === id);
   const serviceExperts = experts[id || ""] || [];
+
+  // Filter and sort experts
+  const filteredExperts = useMemo(() => {
+    let result = [...serviceExperts];
+    
+    if (activeFilter === "online") {
+      result = result.filter(e => e.available);
+    } else if (activeFilter === "top") {
+      result = result.sort((a, b) => b.rating - a.rating);
+    }
+    
+    return result;
+  }, [serviceExperts, activeFilter]);
 
   if (!service) {
     return (
@@ -27,6 +50,10 @@ export default function ServiceDetail() {
   }
 
   const Icon = iconMap[service.icon];
+
+  const handleExpertClick = (expert: Expert) => {
+    navigate(`/service/${id}/expert/${expert.id}`);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-8">
@@ -64,54 +91,129 @@ export default function ServiceDetail() {
         </div>
       </motion.div>
 
-      {/* Experts */}
+      {/* Filters */}
       <div className="px-4 mt-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Эксперты</h3>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+          {FILTERS.map((filter) => (
+            <button
+              key={filter.id}
+              onClick={() => setActiveFilter(filter.id)}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
+                activeFilter === filter.id
+                  ? "gradient-primary text-primary-foreground"
+                  : "glass text-foreground"
+              )}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Experts */}
+      <div className="px-4 mt-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-foreground">Эксперты</h3>
+          <span className="text-sm text-muted-foreground">
+            {filteredExperts.length} специалистов
+          </span>
+        </div>
         
-        {serviceExperts.length > 0 ? (
+        {filteredExperts.length > 0 ? (
           <div className="space-y-3">
-            {serviceExperts.map((expert, index) => (
+            {filteredExperts.map((expert, index) => (
               <motion.div
                 key={expert.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + index * 0.1 }}
-                className="glass-card p-4"
+                transition={{ delay: 0.1 + index * 0.05 }}
+                className="glass-card p-4 cursor-pointer hover:bg-secondary/20 transition-colors"
+                onClick={() => handleExpertClick(expert)}
               >
-                <div className="flex items-center gap-4">
-                  <Avatar className="w-14 h-14 border-2 border-primary/30">
-                    <AvatarImage src={expert.avatar} alt={expert.name} />
-                    <AvatarFallback>{expert.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground">{expert.name}</h4>
-                    <p className="text-sm text-muted-foreground">{expert.specialty}</p>
-                    <div className="flex items-center gap-3 mt-1">
+                <div className="flex items-start gap-4">
+                  <div className="relative">
+                    <Avatar className="w-16 h-16 border-2 border-primary/30">
+                      <AvatarImage src={expert.avatar} alt={expert.name} />
+                      <AvatarFallback>{expert.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    {/* Online indicator */}
+                    {expert.available && (
+                      <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="font-semibold text-foreground">{expert.name}</h4>
+                        <p className="text-sm text-muted-foreground">{expert.specialty}</p>
+                      </div>
+                      <div className={cn(
+                        "px-2 py-1 rounded-full text-xs font-medium flex-shrink-0",
+                        expert.available 
+                          ? "bg-green-500/20 text-green-400" 
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {expert.available ? "Онлайн" : "Офлайн"}
+                      </div>
+                    </div>
+                    
+                    {/* Stats row */}
+                    <div className="flex items-center gap-4 mt-2 text-sm">
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="text-sm font-medium text-foreground">{expert.rating}</span>
-                        <span className="text-xs text-muted-foreground">({expert.reviews})</span>
+                        <span className="font-medium text-foreground">{expert.rating}</span>
+                        <span className="text-muted-foreground">({expert.reviews})</span>
                       </div>
-                      <span className="text-sm font-medium text-primary">{expert.price}</span>
+                      {expert.experience && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Briefcase className="w-3.5 h-3.5" />
+                          <span>{expert.experience}</span>
+                        </div>
+                      )}
+                      {expert.consultations && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>{expert.consultations}+</span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className={cn(
-                    "px-2 py-1 rounded-full text-xs font-medium",
-                    expert.available 
-                      ? "bg-green-500/20 text-green-400" 
-                      : "bg-red-500/20 text-red-400"
-                  )}>
-                    {expert.available ? "Онлайн" : "Офлайн"}
+                    
+                    {/* Price and next slot */}
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-sm font-medium text-primary">{expert.price}</span>
+                      {expert.available && expert.nextSlot && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Ближайший: {expert.nextSlot}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
+                {/* Action buttons */}
                 {expert.available && (
                   <div className="mt-4 flex gap-2">
-                    <Button variant="outline" className="flex-1 gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExpertClick(expert);
+                      }}
+                    >
                       <Calendar className="w-4 h-4" />
                       Записаться
                     </Button>
-                    <Button className="flex-1 gap-2">
+                    <Button 
+                      className="flex-1 gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExpertClick(expert);
+                      }}
+                    >
                       <Clock className="w-4 h-4" />
                       Сейчас
                     </Button>
@@ -123,7 +225,9 @@ export default function ServiceDetail() {
         ) : (
           <div className="glass-card p-8 text-center">
             <p className="text-muted-foreground">
-              Эксперты скоро появятся. Пока воспользуйтесь AI-ассистентом.
+              {activeFilter === "online" 
+                ? "Нет экспертов онлайн. Попробуйте позже."
+                : "Эксперты скоро появятся. Пока воспользуйтесь AI-ассистентом."}
             </p>
             <Button 
               className="mt-4"
