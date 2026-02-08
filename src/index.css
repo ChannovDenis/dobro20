@@ -17,7 +17,7 @@
     --popover: 222 47% 14%;
     --popover-foreground: 210 40% 98%;
 
-    /* Primary - Blue accent */
+    /* Primary - Blue accent (default, overridden by tenant) */
     --primary: 199 89% 48%;
     --primary-foreground: 222 47% 11%;
 
@@ -42,6 +42,11 @@
 
     --radius: 1rem;
 
+    /* Tenant theme variables (set dynamically via JS) */
+    --tenant-primary: 142 76% 36%;
+    --tenant-secondary: 142 70% 95%;
+    --tenant-accent: 142 76% 36%;
+
     /* Category colors */
     --category-legal: 199 89% 48%;
     --category-health: 142 76% 36%;
@@ -62,6 +67,25 @@
     /* Glow effects */
     --glow-primary: 199 89% 48% / 0.4;
     --glow-size: 60px;
+  }
+
+  /* Tenant theme overrides - Applied dynamically by TenantContext */
+  :root[data-tenant="gpb"] {
+    --primary: 210 100% 35%;
+    --ring: 210 100% 35%;
+    --glow-primary: 210 100% 35% / 0.4;
+  }
+
+  :root[data-tenant="wb"] {
+    --primary: 280 80% 50%;
+    --ring: 280 80% 50%;
+    --glow-primary: 280 80% 50% / 0.4;
+  }
+
+  :root[data-tenant="dobro"] {
+    --primary: 142 76% 36%;
+    --ring: 142 76% 36%;
+    --glow-primary: 142 76% 36% / 0.4;
   }
 }
 

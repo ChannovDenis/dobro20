@@ -2,6 +2,7 @@ import { Bell, Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { userProfile } from "@/data/mockData";
 import { motion } from "framer-motion";
+import { useTenant } from "@/hooks/useTenant";
 
 interface TopBarProps {
   showSearch?: boolean;
@@ -10,6 +11,7 @@ interface TopBarProps {
 
 export function TopBar({ showSearch = true, onSearchClick }: TopBarProps) {
   const greeting = getGreeting();
+  const { tenant } = useTenant();
 
   return (
     <motion.header
@@ -18,13 +20,24 @@ export function TopBar({ showSearch = true, onSearchClick }: TopBarProps) {
       className="flex items-center justify-between px-4 py-3 safe-top"
     >
       <div className="flex items-center gap-3">
-        <Avatar className="w-10 h-10 border-2 border-primary/30">
-          <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
-          <AvatarFallback>{userProfile.name.charAt(0)}</AvatarFallback>
-        </Avatar>
+        {/* Tenant logo or user avatar */}
+        {tenant?.logo_url ? (
+          <img 
+            src={tenant.logo_url} 
+            alt={tenant.name} 
+            className="w-10 h-10 object-contain"
+          />
+        ) : (
+          <Avatar className="w-10 h-10 border-2 border-primary/30">
+            <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
+            <AvatarFallback>{userProfile.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+        )}
         <div>
           <p className="text-sm text-muted-foreground">{greeting}</p>
-          <p className="font-semibold text-foreground">{userProfile.name}</p>
+          <p className="font-semibold text-foreground">
+            {tenant?.name || userProfile.name}
+          </p>
         </div>
       </div>
 
