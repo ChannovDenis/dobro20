@@ -1,9 +1,13 @@
 import { useRef, useState, useEffect } from "react";
-import { feedItems } from "@/data/mockData";
+import { feedItems, FeedItem } from "@/data/mockData";
 import { FeedCard } from "./FeedCard";
 import { PromoCard } from "./PromoCard";
 
-export function TikTokFeed() {
+interface TikTokFeedProps {
+  onActiveItemChange?: (item: FeedItem) => void;
+}
+
+export function TikTokFeed({ onActiveItemChange }: TikTokFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -21,6 +25,13 @@ export function TikTokFeed() {
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Notify parent when active item changes
+  useEffect(() => {
+    if (onActiveItemChange && feedItems[activeIndex]) {
+      onActiveItemChange(feedItems[activeIndex]);
+    }
+  }, [activeIndex, onActiveItemChange]);
 
   return (
     <div
