@@ -6,7 +6,7 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useChat } from "@/hooks/useChat";
 import { ChatAction } from "@/types/chat";
-import { Button } from "@/components/ui/button";
+
 
 const SUGGESTIONS = [
   { icon: "⚖️", text: "Помоги с возвратом товара" },
@@ -49,6 +49,12 @@ export default function Chat() {
 
   const hasMessages = messages.length > 0;
 
+  const handleClose = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate('/feed');
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Modal Header with close button */}
@@ -57,14 +63,13 @@ export default function Chat() {
         animate={{ opacity: 1 }}
         className="flex items-center justify-between px-4 py-3 safe-top border-b border-border/30"
       >
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => navigate(-1)}
-          className="text-muted-foreground"
+        <button
+          type="button"
+          onClick={handleClose}
+          className="p-2 rounded-full text-muted-foreground hover:bg-accent transition-colors"
         >
           <X className="w-5 h-5" />
-        </Button>
+        </button>
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
           <h1 className="text-base font-medium text-foreground">

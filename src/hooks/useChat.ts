@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Message, ChatAction, ColorPaletteData, TrendItem } from "@/types/chat";
 import { detectStyleMode, getContextualActions } from "@/constants/chatActions";
 import { getNextTrends } from "@/constants/trends";
@@ -7,12 +7,26 @@ const LISA_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lisa-stylist
 const COLORTYPE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/colortype-analyzer`;
 const TRYON_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/virtual-tryon`;
 
+const STORAGE_KEY = 'dobro-chat-history';
+
 export function useChat() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isStyleMode, setIsStyleMode] = useState(false);
   const [uploadedPhoto, setUploadedPhoto] = useState<{ file: File; url: string } | null>(null);
   const [lastAction, setLastAction] = useState<string | undefined>();
+
+  // Persist messages to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  }, [messages]);
 
   const addMessage = useCallback((message: Omit<Message, "id">) => {
     const newMessage: Message = {
@@ -294,6 +308,11 @@ export function useChat() {
     setUploadedPhoto(null);
   }, [uploadedPhoto]);
 
+  const clearHistory = useCallback(() => {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
+
   return {
     messages,
     isLoading,
@@ -303,5 +322,6 @@ export function useChat() {
     handleAction,
     handleImageUpload,
     clearUploadedPhoto,
+    clearHistory,
   };
 }
