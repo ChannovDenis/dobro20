@@ -1,13 +1,12 @@
-import { Home, MessageCircle, Sparkles, Settings } from "lucide-react";
+import { Home, MessageCircle, Grid3X3 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: Home, label: "Лента", path: "/feed" },
-  { icon: Sparkles, label: "Стилист", path: "/stylist", special: true },
-  { icon: MessageCircle, label: "Чат", path: "/chat" },
-  { icon: Settings, label: "Ещё", path: "/settings" },
+  { icon: MessageCircle, label: "Чат", path: "/chat", special: true },
+  { icon: Grid3X3, label: "Сервисы", path: "/services" },
 ];
 
 export function BottomNav() {
@@ -21,7 +20,7 @@ export function BottomNav() {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
 
-          // Special styling for Stylist button
+          // Special styling for Chat button (center)
           if (item.special) {
             return (
               <motion.button

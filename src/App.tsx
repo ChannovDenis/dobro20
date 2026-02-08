@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import SplashScreen from "./pages/SplashScreen";
 import Feed from "./pages/Feed";
 import Chat from "./pages/Chat";
+import Services from "./pages/Services";
 import Settings from "./pages/Settings";
 import Stylist from "./pages/Stylist";
 import ServiceDetail from "./pages/ServiceDetail";
@@ -25,8 +26,9 @@ const App = () => (
           <Route path="/splash" element={<SplashScreen />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/chat" element={<Chat />} />
-          <Route path="/stylist" element={<Stylist />} />
+          <Route path="/services" element={<Services />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/stylist" element={<Stylist />} />
           <Route path="/service/:id" element={<ServiceDetail />} />
           <Route path="/mini-app/:id" element={<MiniApp />} />
           <Route path="*" element={<NotFound />} />
