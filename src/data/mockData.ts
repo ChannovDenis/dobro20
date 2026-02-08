@@ -399,6 +399,11 @@ export const contentItems: ContentItem[] = [
 ];
 
 export const experts: Record<string, Expert[]> = {
+  garden: [
+    { id: "1", name: "Марина Садовая", specialty: "Овощеводство и рассада", rating: 4.9, reviews: 567, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", price: "Бесплатно", available: true },
+    { id: "2", name: "Павел Агроном", specialty: "Плодовые деревья", rating: 4.8, reviews: 342, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: "500₽/консультация", available: true },
+    { id: "3", name: "Елена Цветкова", specialty: "Цветоводство и ландшафт", rating: 4.7, reviews: 289, avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop", price: "800₽/час", available: false },
+  ],
   lawyer: [
     { id: "1", name: "Иван Петров", specialty: "Гражданское право", rating: 4.9, reviews: 234, avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop", price: "2500₽/час", available: true },
     { id: "2", name: "Мария Сидорова", specialty: "Семейное право", rating: 4.8, reviews: 189, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", price: "3000₽/час", available: true },
