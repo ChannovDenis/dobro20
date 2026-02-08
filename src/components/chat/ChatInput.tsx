@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Send, Plus, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { chatTemplates } from "@/data/mockData";
+import { Button } from "@/components/ui/button";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -34,7 +35,7 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
             onClick={() => setShowTemplates(false)}
           >
             <motion.div
@@ -70,37 +71,39 @@ export function ChatInput({ onSend, isLoading = false }: ChatInputProps) {
         onSubmit={handleSubmit}
         className="fixed bottom-20 left-0 right-0 z-30 px-4 pb-2"
       >
-        <div className="flex items-center gap-2 glass-card p-2">
-          <motion.button
+        <div className="flex items-center gap-2 glass-card p-2 max-w-lg mx-auto">
+          <Button
             type="button"
-            whileTap={{ scale: 0.9 }}
+            variant="glass"
+            size="icon-sm"
             onClick={() => setShowTemplates(true)}
-            className="p-2 rounded-full bg-secondary text-secondary-foreground"
+            className="flex-shrink-0"
           >
             <Plus className="w-5 h-5" />
-          </motion.button>
+          </Button>
           
           <input
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Напишите сообщение..."
+            placeholder="Напишите что угодно..."
             disabled={isLoading}
             className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none text-sm py-2"
           />
           
-          <motion.button
+          <Button
             type="submit"
-            whileTap={{ scale: 0.9 }}
+            variant="gradient"
+            size="icon"
             disabled={!message.trim() || isLoading}
-            className="p-2 rounded-full bg-primary text-primary-foreground disabled:opacity-50"
+            className="flex-shrink-0"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <Send className="w-5 h-5" />
             )}
-          </motion.button>
+          </Button>
         </div>
       </form>
     </>

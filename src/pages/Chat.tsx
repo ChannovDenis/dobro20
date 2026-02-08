@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Bot, Sparkles } from "lucide-react";
+import { Sparkles, Bot } from "lucide-react";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
