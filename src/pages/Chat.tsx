@@ -4,20 +4,10 @@ import { Sparkles, Bot, X } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { SuggestionTicker } from "@/components/chat/SuggestionTicker";
 import { useChat } from "@/hooks/useChat";
 import { ChatAction } from "@/types/chat";
 import { useTenant } from "@/hooks/useTenant";
-
-
-const SUGGESTIONS = [
-  { icon: "🌱", text: "Что сейчас сажать в моём регионе?" },
-  { icon: "⚖️", text: "Помоги с возвратом товара" },
-  { icon: "🩺", text: "Какие симптомы у простуды?" },
-  { icon: "🧠", text: "Как справиться со стрессом?" },
-  { icon: "💰", text: "Как начать копить деньги?" },
-  { icon: "👗", text: "Подбери мне образ" },
-  { icon: "🐕", text: "Чем кормить щенка?" },
-];
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -135,27 +125,8 @@ export default function Chat() {
               </p>
             </motion.div>
 
-            {/* Suggestion chips */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="w-full max-w-sm space-y-2"
-            >
-              {SUGGESTIONS.map((suggestion, index) => (
-                <motion.button
-                  key={suggestion.text}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + index * 0.05 }}
-                  onClick={() => handleSuggestionClick(suggestion.text)}
-                  className="w-full flex items-center gap-3 p-3 glass rounded-xl text-left hover:bg-secondary/30 transition-colors"
-                >
-                  <span className="text-lg">{suggestion.icon}</span>
-                  <span className="text-sm text-foreground">{suggestion.text}</span>
-                </motion.button>
-              ))}
-            </motion.div>
+            {/* Suggestion ticker */}
+            <SuggestionTicker onSuggestionClick={handleSuggestionClick} />
           </div>
         ) : (
           <div className="space-y-4">
