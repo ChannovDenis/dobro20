@@ -2,6 +2,11 @@ import { Home, MessageCircle, Grid3X3 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { ActiveFeedContext } from "@/pages/Feed";
+
+interface BottomNavProps {
+  activeFeedItem?: ActiveFeedContext | null;
+}
 
 const navItems = [
   { icon: Home, label: "Лента", path: "/feed" },
@@ -9,9 +14,19 @@ const navItems = [
   { icon: Grid3X3, label: "Сервисы", path: "/services" },
 ];
 
-export function BottomNav() {
+export function BottomNav({ activeFeedItem }: BottomNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleNavClick = (item: typeof navItems[0]) => {
+    // Special handling for Chat button when on Feed page with active item
+    if (item.path === "/chat" && location.pathname === "/feed" && activeFeedItem) {
+      const prompt = `Расскажи подробнее про: ${activeFeedItem.title}`;
+      navigate(`/chat?prompt=${encodeURIComponent(prompt)}&context=${encodeURIComponent(activeFeedItem.title)}`);
+    } else {
+      navigate(item.path);
+    }
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-card rounded-t-3xl safe-bottom">
@@ -25,7 +40,7 @@ export function BottomNav() {
             return (
               <motion.button
                 key={item.path}
-                onClick={() => navigate(item.path)}
+                onClick={() => handleNavClick(item)}
                 className="relative -mt-6"
                 whileTap={{ scale: 0.95 }}
               >
@@ -48,7 +63,7 @@ export function BottomNav() {
           return (
             <motion.button
               key={item.path}
-              onClick={() => navigate(item.path)}
+              onClick={() => handleNavClick(item)}
               className={cn(
                 "flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground"

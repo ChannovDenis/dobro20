@@ -1,9 +1,36 @@
 import { motion } from "framer-motion";
-import { Heart, Share2, Volume2, VolumeX } from "lucide-react";
+import { Heart, Share2, Volume2, VolumeX, Calendar } from "lucide-react";
 import { FeedItem } from "@/data/mockData";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
-import { FeedCardActions } from "./FeedCardActions";
+import { useNavigate } from "react-router-dom";
+
+// Map feed item tags to service types
+const tagToServiceType: Record<string, string> = {
+  "Сад": "garden",
+  "Рассада": "garden",
+  "Перец": "garden",
+  "Семена": "garden",
+  "ЗОЖ": "wellness",
+  "Фитнес": "wellness",
+  "Йога": "wellness",
+  "Питание": "wellness",
+  "Рецепт": "wellness",
+  "Здоровье": "doctor",
+  "Сон": "doctor",
+  "Безопасность": "security",
+  "Советы": "assistant",
+  "Право": "lawyer",
+  "Лайфхак": "lawyer",
+  "Инструкция": "lawyer",
+  "Психология": "psychologist",
+  "Медитация": "psychologist",
+  "Саморазвитие": "psychologist",
+  "Финансы": "finance",
+  "Инвестиции": "finance",
+  "Питомцы": "vet",
+};
+
 interface FeedCardProps {
   item: FeedItem;
   isActive: boolean;
@@ -19,6 +46,17 @@ export function FeedCard({ item, isActive }: FeedCardProps) {
   const [liked, setLiked] = useState(false);
   const [muted, setMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const navigate = useNavigate();
+
+  // Get service type from first matching tag
+  const serviceType = item.tags.reduce<string | null>((found, tag) => {
+    if (found) return found;
+    return tagToServiceType[tag] || null;
+  }, null) || "assistant";
+
+  const handleBookExpert = () => {
+    navigate(`/service/${serviceType}`);
+  };
 
   // Handle video autoplay based on active state
   useEffect(() => {
@@ -26,7 +64,6 @@ export function FeedCard({ item, isActive }: FeedCardProps) {
     
     if (isActive) {
       videoRef.current.play().catch(() => {
-        // Autoplay failed, likely due to browser policy
         console.log("Autoplay prevented");
       });
     } else {
@@ -126,30 +163,33 @@ export function FeedCard({ item, isActive }: FeedCardProps) {
           </p>
         </motion.div>
 
-        {/* Author */}
+        {/* Author with Expert button */}
         {item.author && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center gap-2 mt-4"
+            className="flex items-center justify-between mt-4"
           >
-            <Avatar className="w-8 h-8 border border-border">
-              <AvatarImage src={item.authorAvatar} alt={item.author} />
-              <AvatarFallback>{item.author.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium text-foreground">
-              {item.author}
-            </span>
+            <div className="flex items-center gap-2">
+              <Avatar className="w-8 h-8 border border-border">
+                <AvatarImage src={item.authorAvatar} alt={item.author} />
+                <AvatarFallback>{item.author.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium text-foreground">
+                {item.author}
+              </span>
+            </div>
+            
+            <button
+              onClick={handleBookExpert}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass border border-border text-foreground text-xs font-medium"
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              К эксперту
+            </button>
           </motion.div>
         )}
-
-        {/* Action buttons - Ask AI & Book Expert */}
-        <FeedCardActions 
-          isActive={isActive} 
-          title={item.title} 
-          tags={item.tags} 
-        />
       </div>
 
       {/* Minimal right side actions - only Like and Share */}
