@@ -7,6 +7,7 @@ import SplashScreen from "./pages/SplashScreen";
 import Feed from "./pages/Feed";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
+import Stylist from "./pages/Stylist";
 import ServiceDetail from "./pages/ServiceDetail";
 import MiniApp from "./pages/MiniApp";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/splash" element={<SplashScreen />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/stylist" element={<Stylist />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/service/:id" element={<ServiceDetail />} />
           <Route path="/mini-app/:id" element={<MiniApp />} />
