@@ -14,16 +14,272 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analytics_events: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          session_id: string | null
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          session_id?: string | null
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          session_id?: string | null
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          ai_messages_used: number | null
+          avatar_url: string | null
+          created_at: string | null
+          display_name: string | null
+          expert_minutes_used: number | null
+          id: string
+          subscription_tier: string | null
+          tenant_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_messages_used?: number | null
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          expert_minutes_used?: number | null
+          id?: string
+          subscription_tier?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_messages_used?: number | null
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          expert_minutes_used?: number | null
+          id?: string
+          subscription_tier?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          ai_name: string | null
+          created_at: string | null
+          enabled_services: string[] | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          quotas: Json | null
+          slug: string
+          theme: Json | null
+          updated_at: string | null
+          welcome_text: string | null
+        }
+        Insert: {
+          ai_name?: string | null
+          created_at?: string | null
+          enabled_services?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          quotas?: Json | null
+          slug: string
+          theme?: Json | null
+          updated_at?: string | null
+          welcome_text?: string | null
+        }
+        Update: {
+          ai_name?: string | null
+          created_at?: string | null
+          enabled_services?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          quotas?: Json | null
+          slug?: string
+          theme?: Json | null
+          updated_at?: string | null
+          welcome_text?: string | null
+        }
+        Relationships: []
+      }
+      topic_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          role: Database["public"]["Enums"]["message_role"]
+          tokens_used: number | null
+          topic_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          role: Database["public"]["Enums"]["message_role"]
+          tokens_used?: number | null
+          topic_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          role?: Database["public"]["Enums"]["message_role"]
+          tokens_used?: number | null
+          topic_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_messages_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topics: {
+        Row: {
+          context: Json | null
+          created_at: string | null
+          id: string
+          service_type: string | null
+          status: Database["public"]["Enums"]["topic_status"] | null
+          tenant_id: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["topic_status"] | null
+          tenant_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["topic_status"] | null
+          tenant_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topics_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_tenant: { Args: { _user_id: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      user_belongs_to_tenant: {
+        Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "partner_admin" | "super_admin"
+      message_role: "user" | "assistant" | "system" | "expert"
+      topic_status: "active" | "archived" | "escalated"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +406,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "partner_admin", "super_admin"],
+      message_role: ["user", "assistant", "system", "expert"],
+      topic_status: ["active", "archived", "escalated"],
+    },
   },
 } as const
