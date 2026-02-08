@@ -102,9 +102,9 @@ serve(async (req) => {
     // Validate session/authentication
     const sessionResult = await validateSession(req);
     if (!sessionResult.valid) {
-      console.log("Session validation failed:", sessionResult.error);
+      console.error("Auth failed");
       return new Response(
-        JSON.stringify({ error: sessionResult.error }),
+        JSON.stringify({ error: "Требуется авторизация" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -116,14 +116,15 @@ serve(async (req) => {
     const urlValidation = validateImageUrl(imageUrl);
     if (!urlValidation.valid) {
       return new Response(
-        JSON.stringify({ error: urlValidation.error }),
+        JSON.stringify({ error: "Некорректное изображение" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("Missing API key");
+      throw new Error("Configuration error");
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -164,31 +165,34 @@ serve(async (req) => {
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Превышен лимит запросов" }), {
+        console.error("Rate limit exceeded");
+        return new Response(JSON.stringify({ error: "Сервис временно перегружен. Попробуйте позже." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Требуется пополнение баланса" }), {
+        console.error("Payment required");
+        return new Response(JSON.stringify({ error: "Сервис временно недоступен." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw new Error("AI service error");
+      console.error("AI service error:", response.status);
+      throw new Error("Service error");
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
 
     if (!content) {
-      throw new Error("No response from AI");
+      throw new Error("No response");
     }
 
     // Parse JSON from response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("Invalid response format");
+      throw new Error("Invalid format");
     }
 
     const colortype = JSON.parse(jsonMatch[0]);
@@ -197,9 +201,9 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("colortype-analyzer error:", error);
+    console.error("Function error:", error);
     return new Response(
-      JSON.stringify({ error: "Ошибка анализа" }),
+      JSON.stringify({ error: "Произошла ошибка. Попробуйте позже." }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

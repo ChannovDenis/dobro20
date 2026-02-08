@@ -118,9 +118,9 @@ serve(async (req) => {
     // Validate session/authentication
     const sessionResult = await validateSession(req);
     if (!sessionResult.valid) {
-      console.log("Session validation failed:", sessionResult.error);
+      console.error("Auth failed");
       return new Response(
-        JSON.stringify({ error: sessionResult.error }),
+        JSON.stringify({ error: "Требуется авторизация" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -132,7 +132,7 @@ serve(async (req) => {
     const urlValidation = validateImageUrl(userPhotoUrl);
     if (!urlValidation.valid) {
       return new Response(
-        JSON.stringify({ error: urlValidation.error }),
+        JSON.stringify({ error: "Некорректное изображение" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -141,7 +141,7 @@ serve(async (req) => {
     const descValidation = validateTextInput(clothingDescription, MAX_DESCRIPTION_LENGTH, "Описание одежды");
     if (!descValidation.valid) {
       return new Response(
-        JSON.stringify({ error: descValidation.error }),
+        JSON.stringify({ error: "Некорректное описание" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -149,14 +149,15 @@ serve(async (req) => {
     const styleValidation = validateTextInput(style, MAX_STYLE_LENGTH, "Стиль");
     if (!styleValidation.valid) {
       return new Response(
-        JSON.stringify({ error: styleValidation.error }),
+        JSON.stringify({ error: "Некорректный стиль" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("Missing API key");
+      throw new Error("Configuration error");
     }
 
     const outfitDescription = descValidation.value || `стильный ${styleValidation.value || "casual"} образ`;
@@ -195,20 +196,21 @@ serve(async (req) => {
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Превышен лимит запросов" }), {
+        console.error("Rate limit exceeded");
+        return new Response(JSON.stringify({ error: "Сервис временно перегружен. Попробуйте позже." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Требуется пополнение баланса" }), {
+        console.error("Payment required");
+        return new Response(JSON.stringify({ error: "Сервис временно недоступен." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const errorText = await response.text();
-      console.error("Virtual try-on error:", response.status, errorText);
-      throw new Error("Ошибка генерации образа");
+      console.error("AI service error:", response.status);
+      throw new Error("Service error");
     }
 
     const data = await response.json();
@@ -238,9 +240,9 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("virtual-tryon error:", error);
+    console.error("Function error:", error);
     return new Response(
-      JSON.stringify({ error: "Ошибка примерки" }),
+      JSON.stringify({ error: "Произошла ошибка. Попробуйте позже." }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
