@@ -55,6 +55,18 @@ function applyThemeToDocument(theme: TenantTheme, slug: string) {
   root.style.setProperty('--glow-primary', `${theme.primary} / 0.4`);
 }
 
+// Default theme and quotas for fallback
+const DEFAULT_THEME: TenantTheme = {
+  primary: "142 76% 36%",
+  secondary: "142 70% 95%",
+  accent: "142 76% 36%",
+};
+
+const DEFAULT_QUOTAS: TenantQuotas = {
+  free_ai_messages: 100,
+  free_expert_minutes: 30,
+};
+
 export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,8 +95,9 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
+      // Use the public view that only exposes safe tenant information
       const { data, error: fetchError } = await supabase
-        .from('tenants')
+        .from('public_tenant_info')
         .select('*')
         .eq('slug', slug)
         .eq('is_active', true)
@@ -99,9 +112,10 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         throw fetchError;
       }
 
-      const themeData = data.theme as unknown as TenantTheme;
-      const quotasData = data.quotas as unknown as TenantQuotas;
+      const themeData = (data.theme as unknown as TenantTheme) || DEFAULT_THEME;
 
+      // Note: quotas and enabled_services are not exposed in public view for security
+      // They should be fetched via authenticated requests or edge functions when needed
       const tenantData: Tenant = {
         id: data.id,
         slug: data.slug,
@@ -110,8 +124,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         ai_name: data.ai_name || 'Добросервис AI',
         welcome_text: data.welcome_text || 'Чем могу помочь?',
         theme: themeData,
-        enabled_services: data.enabled_services || [],
-        quotas: quotasData,
+        enabled_services: [], // Not exposed in public view
+        quotas: DEFAULT_QUOTAS, // Not exposed in public view
         is_active: data.is_active,
       };
 
@@ -130,8 +144,8 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   };
 
   const isServiceEnabled = (serviceType: string): boolean => {
-    if (!tenant) return true; // Allow all if no tenant loaded
-    return tenant.enabled_services.includes(serviceType);
+    // Allow all services for public view (quotas are enforced server-side)
+    return true;
   };
 
   // Initial load

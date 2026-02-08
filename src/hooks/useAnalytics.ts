@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from './useTenant';
+import { getSessionId } from '@/lib/session';
 
 // Allowed event types (must match RLS policy)
 export type AnalyticsEventType = 
@@ -18,19 +19,11 @@ interface EventData {
   [key: string]: unknown;
 }
 
-// Generate a session ID that persists for the browser session
-function getSessionId(): string {
-  let sessionId = sessionStorage.getItem('analytics_session_id');
-  if (!sessionId) {
-    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    sessionStorage.setItem('analytics_session_id', sessionId);
-  }
-  return sessionId;
-}
-
 export function useAnalytics() {
   const { tenantId } = useTenant();
   const sessionId = useRef(getSessionId());
+
+  // Use the session ID from the shared session module
 
   /**
    * Track an analytics event

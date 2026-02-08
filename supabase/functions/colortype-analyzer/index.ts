@@ -1,9 +1,97 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-session-id",
 };
+
+// Maximum URL length to prevent resource exhaustion
+const MAX_URL_LENGTH = 2048;
+
+// Allowed image URL domains (data URLs are also allowed for base64 images)
+const ALLOWED_DOMAINS = [
+  'supabase.co',
+  'supabase.in',
+  'tjximrjleinvvczdzotr.supabase.co',
+  'storage.googleapis.com',
+  'firebasestorage.googleapis.com',
+  'cloudinary.com',
+  'res.cloudinary.com',
+  'imgur.com',
+  'i.imgur.com',
+];
+
+function validateImageUrl(imageUrl: unknown): { valid: boolean; error?: string; url?: string } {
+  if (!imageUrl || typeof imageUrl !== 'string') {
+    return { valid: false, error: "Требуется URL изображения" };
+  }
+
+  if (imageUrl.length > MAX_URL_LENGTH) {
+    return { valid: false, error: "URL слишком длинный" };
+  }
+
+  // Allow data URLs for base64 images
+  if (imageUrl.startsWith('data:image/')) {
+    // Validate it's a proper data URL
+    const match = imageUrl.match(/^data:image\/(jpeg|jpg|png|gif|webp);base64,/);
+    if (!match) {
+      return { valid: false, error: "Неверный формат изображения" };
+    }
+    return { valid: true, url: imageUrl };
+  }
+
+  // Validate URL format
+  try {
+    const url = new URL(imageUrl);
+    
+    // Only allow https
+    if (url.protocol !== 'https:') {
+      return { valid: false, error: "Требуется HTTPS URL" };
+    }
+
+    // Check against allowed domains
+    const isAllowed = ALLOWED_DOMAINS.some(domain => 
+      url.hostname === domain || url.hostname.endsWith('.' + domain)
+    );
+
+    if (!isAllowed) {
+      return { valid: false, error: "URL изображения должен быть с разрешённого домена" };
+    }
+
+    return { valid: true, url: imageUrl };
+  } catch {
+    return { valid: false, error: "Неверный формат URL" };
+  }
+}
+
+async function validateSession(req: Request): Promise<{ valid: boolean; userId?: string; sessionId?: string; error?: string }> {
+  const authHeader = req.headers.get('Authorization');
+  const sessionId = req.headers.get('x-session-id');
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data, error } = await supabaseClient.auth.getClaims(token);
+    
+    if (!error && data?.claims?.sub) {
+      return { valid: true, userId: data.claims.sub as string };
+    }
+  }
+  
+  if (sessionId && sessionId.length >= 32 && sessionId.length <= 128) {
+    if (/^[a-zA-Z0-9_-]+$/.test(sessionId)) {
+      return { valid: true, sessionId };
+    }
+  }
+  
+  return { valid: false, error: "Требуется аутентификация или действительная сессия" };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -11,11 +99,24 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl } = await req.json();
-    
-    if (!imageUrl) {
+    // Validate session/authentication
+    const sessionResult = await validateSession(req);
+    if (!sessionResult.valid) {
+      console.log("Session validation failed:", sessionResult.error);
       return new Response(
-        JSON.stringify({ error: "Требуется URL изображения" }),
+        JSON.stringify({ error: sessionResult.error }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const body = await req.json();
+    const { imageUrl } = body;
+    
+    // Validate image URL
+    const urlValidation = validateImageUrl(imageUrl);
+    if (!urlValidation.valid) {
+      return new Response(
+        JSON.stringify({ error: urlValidation.error }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -54,7 +155,7 @@ serve(async (req) => {
             role: "user",
             content: [
               { type: "text", text: "Определи мой цветотип по этому фото" },
-              { type: "image_url", image_url: { url: imageUrl } },
+              { type: "image_url", image_url: { url: urlValidation.url } },
             ],
           },
         ],
@@ -98,7 +199,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("colortype-analyzer error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Ошибка анализа" }),
+      JSON.stringify({ error: "Ошибка анализа" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
