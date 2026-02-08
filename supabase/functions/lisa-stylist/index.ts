@@ -122,9 +122,9 @@ serve(async (req) => {
     // Validate session/authentication
     const sessionResult = await validateSession(req);
     if (!sessionResult.valid) {
-      console.log("Session validation failed:", sessionResult.error);
+      console.error("Auth failed");
       return new Response(
-        JSON.stringify({ error: sessionResult.error }),
+        JSON.stringify({ error: "Требуется авторизация" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -135,9 +135,9 @@ serve(async (req) => {
     // Validate input
     const validation = validateMessages(messages);
     if (!validation.valid) {
-      console.log("Message validation failed:", validation.error);
+      console.error("Validation failed");
       return new Response(
-        JSON.stringify({ error: validation.error }),
+        JSON.stringify({ error: "Некорректный запрос" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -145,14 +145,15 @@ serve(async (req) => {
     // Validate isStyleMode
     if (isStyleMode !== undefined && typeof isStyleMode !== 'boolean') {
       return new Response(
-        JSON.stringify({ error: "Invalid isStyleMode parameter" }),
+        JSON.stringify({ error: "Некорректный запрос" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("Missing API key");
+      throw new Error("Configuration error");
     }
 
     const systemPrompt = isStyleMode ? LISA_SYSTEM_PROMPT : `Ты — помощник Добросервис AI. Отвечай кратко и полезно. Используй 1-2 эмодзи. Если спрашивают про стиль, моду или одежду — переключись на роль стилиста Лизы.`;
@@ -175,20 +176,22 @@ serve(async (req) => {
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Превышен лимит запросов. Попробуйте позже." }), {
+        console.error("Rate limit exceeded");
+        return new Response(JSON.stringify({ error: "Сервис временно перегружен. Попробуйте позже." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Требуется пополнение баланса." }), {
+        console.error("Payment required");
+        return new Response(JSON.stringify({ error: "Сервис временно недоступен." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: "Ошибка AI сервиса" }), {
+      console.error("AI service error:", response.status, errorText);
+      return new Response(JSON.stringify({ error: "Произошла ошибка. Попробуйте позже." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -198,9 +201,9 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (error) {
-    console.error("lisa-stylist error:", error);
+    console.error("Function error:", error);
     return new Response(
-      JSON.stringify({ error: "Произошла неожиданная ошибка" }),
+      JSON.stringify({ error: "Произошла ошибка. Попробуйте позже." }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
