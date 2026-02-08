@@ -53,7 +53,13 @@ export interface Expert {
   reviews: number;
   avatar: string;
   price: string;
+  priceChat?: string;
   available: boolean;
+  experience?: string;
+  consultations?: number;
+  nextSlot?: string;
+  timeSlots?: string[];
+  bio?: string;
 }
 
 export interface UserProfile {
@@ -400,21 +406,21 @@ export const contentItems: ContentItem[] = [
 
 export const experts: Record<string, Expert[]> = {
   garden: [
-    { id: "1", name: "Марина Садовая", specialty: "Овощеводство и рассада", rating: 4.9, reviews: 567, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", price: "Бесплатно", available: true },
-    { id: "2", name: "Павел Агроном", specialty: "Плодовые деревья", rating: 4.8, reviews: 342, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: "500₽/консультация", available: true },
-    { id: "3", name: "Елена Цветкова", specialty: "Цветоводство и ландшафт", rating: 4.7, reviews: 289, avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop", price: "800₽/час", available: false },
+    { id: "1", name: "Марина Садовая", specialty: "Овощеводство и рассада", rating: 4.9, reviews: 567, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", price: "Бесплатно", priceChat: "Бесплатно", available: true, experience: "8 лет", consultations: 1234, nextSlot: "14:00", timeSlots: ["10:00", "10:30", "11:00", "14:00", "15:30", "16:00"], bio: "Специалист по выращиванию овощей и подготовке рассады. Помогу с любыми вопросами по огороду." },
+    { id: "2", name: "Павел Агроном", specialty: "Плодовые деревья", rating: 4.8, reviews: 342, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: "500₽", priceChat: "300₽", available: true, experience: "12 лет", consultations: 2100, nextSlot: "11:30", timeSlots: ["09:00", "11:30", "13:00", "15:00"], bio: "Агроном с опытом работы в питомниках. Консультации по плодовым деревьям и кустарникам." },
+    { id: "3", name: "Елена Цветкова", specialty: "Цветоводство и ландшафт", rating: 4.7, reviews: 289, avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop", price: "800₽", priceChat: "500₽", available: false, experience: "6 лет", consultations: 890, timeSlots: [], bio: "Ландшафтный дизайнер и цветовод. Создаю красивые сады и клумбы." },
   ],
   lawyer: [
-    { id: "1", name: "Иван Петров", specialty: "Гражданское право", rating: 4.9, reviews: 234, avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop", price: "2500₽/час", available: true },
-    { id: "2", name: "Мария Сидорова", specialty: "Семейное право", rating: 4.8, reviews: 189, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", price: "3000₽/час", available: true },
-    { id: "3", name: "Алексей Козлов", specialty: "Трудовое право", rating: 4.7, reviews: 156, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: "2000₽/час", available: false },
+    { id: "1", name: "Иван Петров", specialty: "Гражданское право", rating: 4.9, reviews: 234, avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop", price: "2500₽", priceChat: "1500₽", available: true, experience: "15 лет", consultations: 5200, nextSlot: "10:00", timeSlots: ["10:00", "11:00", "14:00", "16:00", "17:00"], bio: "Адвокат с 15-летним стажем. Специализация на гражданских делах и защите прав потребителей." },
+    { id: "2", name: "Мария Сидорова", specialty: "Семейное право", rating: 4.8, reviews: 189, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", price: "3000₽", priceChat: "2000₽", available: true, experience: "10 лет", consultations: 3100, nextSlot: "15:00", timeSlots: ["09:30", "12:00", "15:00", "17:30"], bio: "Семейный адвокат. Разводы, алименты, раздел имущества." },
+    { id: "3", name: "Алексей Козлов", specialty: "Трудовое право", rating: 4.7, reviews: 156, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: "2000₽", priceChat: "1200₽", available: false, experience: "8 лет", consultations: 1800, timeSlots: [], bio: "Юрист по трудовым спорам. Помогу с увольнением, зарплатой и трудовыми договорами." },
   ],
   doctor: [
-    { id: "1", name: "Елена Волкова", specialty: "Терапевт", rating: 4.9, reviews: 312, avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop", price: "1500₽/консультация", available: true },
-    { id: "2", name: "Дмитрий Новиков", specialty: "Кардиолог", rating: 4.8, reviews: 245, avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop", price: "2500₽/консультация", available: true },
+    { id: "1", name: "Елена Волкова", specialty: "Терапевт", rating: 4.9, reviews: 312, avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop", price: "1500₽", priceChat: "800₽", available: true, experience: "12 лет", consultations: 4500, nextSlot: "11:00", timeSlots: ["09:00", "11:00", "13:00", "15:00", "17:00"], bio: "Врач-терапевт высшей категории. Диагностика и лечение широкого спектра заболеваний." },
+    { id: "2", name: "Дмитрий Новиков", specialty: "Кардиолог", rating: 4.8, reviews: 245, avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop", price: "2500₽", priceChat: "1500₽", available: true, experience: "18 лет", consultations: 6200, nextSlot: "14:30", timeSlots: ["10:30", "14:30", "16:00"], bio: "Кардиолог с многолетним опытом. Диагностика и лечение заболеваний сердца." },
   ],
   psychologist: [
-    { id: "1", name: "Анна Морозова", specialty: "Психотерапия", rating: 5.0, reviews: 421, avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop", price: "3500₽/сессия", available: true },
+    { id: "1", name: "Анна Морозова", specialty: "Психотерапия", rating: 5.0, reviews: 421, avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop", price: "3500₽", priceChat: "2000₽", available: true, experience: "14 лет", consultations: 7800, nextSlot: "12:00", timeSlots: ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"], bio: "Клинический психолог и психотерапевт. Работа с тревожностью, депрессией, личностным ростом." },
   ],
 };
 
