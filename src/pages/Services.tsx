@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { userProfile, services } from "@/data/mockData";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, FileText, Calculator, Bot, Settings,
@@ -53,19 +54,70 @@ const categories = [
 export default function Services() {
   const navigate = useNavigate();
 
+  const handleClose = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate('/feed');
+  };
+
+  const handleQuickAction = (id: string) => {
+    switch (id) {
+      case "scan":
+        toast.info("🔍 Сканер QR-кодов скоро будет доступен");
+        break;
+      case "pay":
+        toast.info("💳 Раздел оплаты в разработке");
+        break;
+      case "cashback":
+        toast.info("💰 Кэшбэк-программа запускается скоро");
+        break;
+      case "bonus":
+        toast.info("⭐ Бонусная программа скоро");
+        break;
+    }
+  };
+
+  const handlePromoAction = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    switch (id) {
+      case "premium":
+        toast.success("🎉 Премиум активирован на 30 дней!");
+        break;
+      case "referral":
+        if (navigator.share) {
+          navigator.share({
+            title: "Добросервис",
+            text: "Присоединяйся и получи бонус!",
+            url: window.location.origin,
+          });
+        } else {
+          navigator.clipboard.writeText(window.location.origin);
+          toast.success("📋 Ссылка скопирована!");
+        }
+        break;
+    }
+  };
+
+  const handleBellClick = () => {
+    toast.info("🔔 У вас пока нет новых уведомлений");
+  };
+
+  const handleCategoryAll = (categoryId: string) => {
+    toast.info(`📂 Раздел "${categoryId}" скоро будет доступен`);
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-y-auto pb-8">
       {/* Modal Header with close button */}
       <header className="sticky top-0 z-10 px-4 pt-4 pb-2 safe-top bg-background/80 backdrop-blur-md border-b border-border/30">
         <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => navigate(-1)}
-            className="text-muted-foreground"
+          <button
+            type="button"
+            onClick={handleClose}
+            className="p-2 rounded-full text-muted-foreground hover:bg-accent transition-colors"
           >
             <X className="w-5 h-5" />
-          </Button>
+          </button>
           
           <motion.div 
             initial={{ opacity: 0 }}
@@ -85,6 +137,7 @@ export default function Services() {
           <div className="flex items-center gap-2">
             <motion.button
               whileTap={{ scale: 0.95 }}
+              onClick={handleBellClick}
               className="p-2 rounded-full glass relative"
             >
               <Bell className="w-5 h-5 text-foreground" />
@@ -123,6 +176,7 @@ export default function Services() {
                   </div>
                   <Button 
                     size="sm" 
+                    onClick={(e) => handlePromoAction(promo.id, e)}
                     className="bg-white/20 hover:bg-white/30 text-white border-0 rounded-full text-xs"
                   >
                     {promo.action}
@@ -148,6 +202,7 @@ export default function Services() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleQuickAction(action.id)}
                 className="flex flex-col items-center gap-2"
               >
                 <div className={cn(
@@ -193,7 +248,12 @@ export default function Services() {
           >
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-muted-foreground">{category.label}</h2>
-              <button className="text-xs text-primary font-medium">Все</button>
+              <button 
+                onClick={() => handleCategoryAll(category.id)}
+                className="text-xs text-primary font-medium"
+              >
+                Все
+              </button>
             </div>
             
             <div className="flex gap-3 overflow-x-auto no-scrollbar">
