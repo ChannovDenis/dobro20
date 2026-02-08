@@ -2,12 +2,22 @@ import { useState, useCallback, useEffect } from "react";
 import { Message, ChatAction, ColorPaletteData, TrendItem } from "@/types/chat";
 import { detectStyleMode, getContextualActions } from "@/constants/chatActions";
 import { getNextTrends } from "@/constants/trends";
+import { getSessionId } from "@/lib/session";
 
 const LISA_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lisa-stylist`;
 const COLORTYPE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/colortype-analyzer`;
 const TRYON_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/virtual-tryon`;
 
 const STORAGE_KEY = 'dobro-chat-history';
+
+// Helper to get auth headers with session ID
+function getAuthHeaders(): Record<string, string> {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    "x-session-id": getSessionId(),
+  };
+}
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -49,10 +59,7 @@ export function useChat() {
   ) => {
     const response = await fetch(LISA_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         messages: conversationHistory,
         isStyleMode,
@@ -60,6 +67,9 @@ export function useChat() {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Требуется авторизация.");
+      }
       if (response.status === 429) {
         throw new Error("Превышен лимит запросов. Попробуйте позже.");
       }
@@ -191,17 +201,17 @@ export function useChat() {
             } else {
               const tryonResponse = await fetch(TRYON_URL, {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({
                   userPhotoUrl: uploadedPhoto.url,
                   style: "casual chic",
                 }),
               });
 
-              if (!tryonResponse.ok) throw new Error("Ошибка примерки");
+              if (!tryonResponse.ok) {
+                if (tryonResponse.status === 401) throw new Error("Требуется авторизация");
+                throw new Error("Ошибка примерки");
+              }
               const result = await tryonResponse.json();
 
               addMessage({
@@ -223,14 +233,14 @@ export function useChat() {
             } else {
               const colortypeResponse = await fetch(COLORTYPE_URL, {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify({ imageUrl: uploadedPhoto.url }),
               });
 
-              if (!colortypeResponse.ok) throw new Error("Ошибка анализа");
+              if (!colortypeResponse.ok) {
+                if (colortypeResponse.status === 401) throw new Error("Требуется авторизация");
+                throw new Error("Ошибка анализа");
+              }
               const colorData: ColorPaletteData = await colortypeResponse.json();
 
               addMessage({

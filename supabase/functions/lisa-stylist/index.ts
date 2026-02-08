@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-session-id",
 };
 
 const LISA_SYSTEM_PROMPT = `Ты — Лиза, AI-стилист и персональный консультант по моде в приложении Добросервис.
@@ -33,13 +34,121 @@ const LISA_SYSTEM_PROMPT = `Ты — Лиза, AI-стилист и персон
 - Если загрузили фото — похвали и предложи анализ
 - Будь позитивной и вдохновляющей`;
 
+// Input validation constants
+const MAX_MESSAGES = 50;
+const MAX_MESSAGE_LENGTH = 10000;
+
+interface ChatMessage {
+  role: string;
+  content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
+}
+
+function validateMessages(messages: unknown): { valid: boolean; error?: string; messages?: ChatMessage[] } {
+  if (!messages || !Array.isArray(messages)) {
+    return { valid: false, error: "Invalid messages format" };
+  }
+
+  if (messages.length > MAX_MESSAGES) {
+    return { valid: false, error: `Too many messages (max ${MAX_MESSAGES})` };
+  }
+
+  if (messages.length === 0) {
+    return { valid: false, error: "At least one message is required" };
+  }
+
+  for (const msg of messages) {
+    if (!msg || typeof msg !== 'object') {
+      return { valid: false, error: "Invalid message object" };
+    }
+    
+    if (!msg.role || !['user', 'assistant', 'system'].includes(msg.role)) {
+      return { valid: false, error: "Invalid message role" };
+    }
+
+    if (typeof msg.content === 'string') {
+      if (msg.content.length > MAX_MESSAGE_LENGTH) {
+        return { valid: false, error: `Message too long (max ${MAX_MESSAGE_LENGTH} chars)` };
+      }
+    } else if (Array.isArray(msg.content)) {
+      for (const part of msg.content) {
+        if (part.type === 'text' && part.text) {
+          if (typeof part.text !== 'string' || part.text.length > MAX_MESSAGE_LENGTH) {
+            return { valid: false, error: `Message text too long (max ${MAX_MESSAGE_LENGTH} chars)` };
+          }
+        }
+      }
+    } else {
+      return { valid: false, error: "Invalid message content" };
+    }
+  }
+
+  return { valid: true, messages: messages as ChatMessage[] };
+}
+
+async function validateSession(req: Request): Promise<{ valid: boolean; userId?: string; sessionId?: string; error?: string }> {
+  const authHeader = req.headers.get('Authorization');
+  const sessionId = req.headers.get('x-session-id');
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data, error } = await supabaseClient.auth.getClaims(token);
+    
+    if (!error && data?.claims?.sub) {
+      return { valid: true, userId: data.claims.sub as string };
+    }
+  }
+  
+  if (sessionId && sessionId.length >= 32 && sessionId.length <= 128) {
+    if (/^[a-zA-Z0-9_-]+$/.test(sessionId)) {
+      return { valid: true, sessionId };
+    }
+  }
+  
+  return { valid: false, error: "Authentication or valid session required" };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages, isStyleMode } = await req.json();
+    // Validate session/authentication
+    const sessionResult = await validateSession(req);
+    if (!sessionResult.valid) {
+      console.log("Session validation failed:", sessionResult.error);
+      return new Response(
+        JSON.stringify({ error: sessionResult.error }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const body = await req.json();
+    const { messages, isStyleMode } = body;
+    
+    // Validate input
+    const validation = validateMessages(messages);
+    if (!validation.valid) {
+      console.log("Message validation failed:", validation.error);
+      return new Response(
+        JSON.stringify({ error: validation.error }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate isStyleMode
+    if (isStyleMode !== undefined && typeof isStyleMode !== 'boolean') {
+      return new Response(
+        JSON.stringify({ error: "Invalid isStyleMode parameter" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -58,7 +167,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...validation.messages,
         ],
         stream: true,
       }),
@@ -91,7 +200,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("lisa-stylist error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Неизвестная ошибка" }),
+      JSON.stringify({ error: "Произошла неожиданная ошибка" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
