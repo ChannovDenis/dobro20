@@ -38,11 +38,21 @@ const TenantContext = createContext<TenantContextValue | undefined>(undefined);
 const DEFAULT_TENANT_SLUG = 'dobro';
 
 // Apply tenant theme as CSS variables
-function applyThemeToDocument(theme: TenantTheme) {
+function applyThemeToDocument(theme: TenantTheme, slug: string) {
   const root = document.documentElement;
+  
+  // Set data attribute for CSS-based theming
+  root.setAttribute('data-tenant', slug);
+  
+  // Set CSS variables from tenant theme
   root.style.setProperty('--tenant-primary', theme.primary);
   root.style.setProperty('--tenant-secondary', theme.secondary);
   root.style.setProperty('--tenant-accent', theme.accent);
+  
+  // Also update the main primary color to match tenant
+  root.style.setProperty('--primary', theme.primary);
+  root.style.setProperty('--ring', theme.primary);
+  root.style.setProperty('--glow-primary', `${theme.primary} / 0.4`);
 }
 
 export function TenantProvider({ children }: { children: React.ReactNode }) {
@@ -106,7 +116,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       };
 
       setTenant(tenantData);
-      applyThemeToDocument(tenantData.theme);
+      applyThemeToDocument(tenantData.theme, tenantData.slug);
     } catch (err) {
       console.error('Failed to fetch tenant:', err);
       setError('Не удалось загрузить конфигурацию');

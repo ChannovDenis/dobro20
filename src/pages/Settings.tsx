@@ -2,16 +2,19 @@ import { motion } from "framer-motion";
 import { 
   Crown, Bell, Shield, Info, LogOut,
   Moon, Globe, Trash2, ExternalLink,
-  Instagram, Send
+  Instagram, Send, Palette, BarChart3
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ProfileHeader } from "@/components/settings/ProfileHeader";
 import { SuperAppGrid } from "@/components/settings/SuperAppGrid";
 import { SettingsSection, SettingsItem } from "@/components/settings/SettingsSection";
+import { ThemeSwitcher } from "@/components/settings/ThemeSwitcher";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Settings() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState({
     push: true,
     email: false,
@@ -72,9 +75,22 @@ export default function Settings() {
           <SettingsItem label="Двухфакторная аутентификация" />
         </SettingsSection>
 
+        {/* Theme */}
+        <SettingsSection icon={<Palette className="w-5 h-5" />} title="Тема оформления" defaultOpen>
+          <ThemeSwitcher />
+        </SettingsSection>
+
+        {/* Partner Admin */}
+        <SettingsSection icon={<BarChart3 className="w-5 h-5" />} title="Партнёрам">
+          <SettingsItem 
+            label="Панель партнёра" 
+            action={<ExternalLink className="w-4 h-4 text-muted-foreground" />}
+            onClick={() => navigate('/admin')}
+          />
+        </SettingsSection>
+
         {/* App Settings */}
         <SettingsSection icon={<Moon className="w-5 h-5" />} title="Приложение">
-          <SettingsItem label="Тема" value="Тёмная" />
           <SettingsItem 
             label="Язык" 
             value="Русский" 
