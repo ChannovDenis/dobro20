@@ -12,6 +12,7 @@ import Settings from "./pages/Settings";
 import ServiceDetail from "./pages/ServiceDetail";
 import ExpertDetail from "./pages/ExpertDetail";
 import MiniApp from "./pages/MiniApp";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/service/:id" element={<ServiceDetail />} />
             <Route path="/service/:id/expert/:expertId" element={<ExpertDetail />} />
             <Route path="/mini-app/:id" element={<MiniApp />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
