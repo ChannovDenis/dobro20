@@ -1,4 +1,17 @@
-import { Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, Bot } from "lucide-react";
+import { 
+  Scale, 
+  Heart, 
+  Brain, 
+  Sparkles, 
+  Bot, 
+  Sprout, 
+  Stethoscope, 
+  TrendingUp, 
+  ShieldCheck, 
+  PawPrint,
+  Home,
+  Palette
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { services } from "@/data/mockData";
@@ -8,12 +21,15 @@ const iconMap: Record<string, React.ElementType> = {
   Scale,
   Heart,
   Brain,
-  Wallet,
-  Dumbbell,
-  Shield,
-  Dog,
   Sparkles,
   Bot,
+  Sprout,
+  Stethoscope,
+  TrendingUp,
+  ShieldCheck,
+  PawPrint,
+  Home,
+  Palette,
 };
 
 export function ServiceGrid() {

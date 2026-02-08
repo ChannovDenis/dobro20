@@ -58,6 +58,9 @@ export default {
           vet: "hsl(var(--category-vet))",
           style: "hsl(var(--category-style))",
           assistant: "hsl(var(--category-assistant))",
+          garden: "hsl(var(--category-garden))",
+          realtor: "hsl(var(--category-realtor))",
+          beauty: "hsl(var(--category-beauty))",
         },
       },
       borderRadius: {
