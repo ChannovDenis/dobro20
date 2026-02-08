@@ -47,6 +47,13 @@ export type Database = {
             foreignKeyName: "analytics_events_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
+            referencedRelation: "public_tenant_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
@@ -90,6 +97,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "public_tenant_info"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -188,6 +202,7 @@ export type Database = {
           created_at: string | null
           id: string
           service_type: string | null
+          session_id: string | null
           status: Database["public"]["Enums"]["topic_status"] | null
           tenant_id: string | null
           title: string | null
@@ -199,6 +214,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           service_type?: string | null
+          session_id?: string | null
           status?: Database["public"]["Enums"]["topic_status"] | null
           tenant_id?: string | null
           title?: string | null
@@ -210,6 +226,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           service_type?: string | null
+          session_id?: string | null
           status?: Database["public"]["Enums"]["topic_status"] | null
           tenant_id?: string | null
           title?: string | null
@@ -217,6 +234,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "topics_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "public_tenant_info"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "topics_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -253,6 +277,13 @@ export type Database = {
             foreignKeyName: "user_roles_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
+            referencedRelation: "public_tenant_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
@@ -260,7 +291,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_tenant_info: {
+        Row: {
+          ai_name: string | null
+          id: string | null
+          is_active: boolean | null
+          logo_url: string | null
+          name: string | null
+          slug: string | null
+          theme: Json | null
+          welcome_text: string | null
+        }
+        Insert: {
+          ai_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string | null
+          slug?: string | null
+          theme?: Json | null
+          welcome_text?: string | null
+        }
+        Update: {
+          ai_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string | null
+          slug?: string | null
+          theme?: Json | null
+          welcome_text?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_tenant: { Args: { _user_id: string }; Returns: string }
