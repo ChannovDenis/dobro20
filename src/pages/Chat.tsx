@@ -4,11 +4,8 @@ import { Sparkles, Bot } from "lucide-react";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
-import { QuickActions } from "@/components/chat/QuickActions";
 import { useChat } from "@/hooks/useChat";
 import { ChatAction } from "@/types/chat";
-import { WELCOME_ACTIONS } from "@/constants/chatActions";
-import { ActionButtons } from "@/components/chat/ActionButtons";
 
 export default function Chat() {
   const {
@@ -31,10 +28,6 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = (content: string) => {
-    sendMessage(content);
-  };
-
   const handleActionClick = (action: string) => {
     handleAction(action as ChatAction);
   };
@@ -43,56 +36,35 @@ export default function Chat() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
+      {/* Minimal Header */}
       <motion.header
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="flex items-center justify-center gap-2 px-4 py-4 safe-top"
+        className="flex items-center justify-center gap-2 px-4 py-3 safe-top border-b border-border/30"
       >
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <h1 className="text-lg font-semibold text-foreground">
-            {isStyleMode ? "Стилист Лиза" : "Добросервис AI"}
-          </h1>
-        </div>
+        <Sparkles className="w-4 h-4 text-primary" />
+        <h1 className="text-base font-medium text-foreground">
+          {isStyleMode ? "Стилист Лиза" : "Добросервис AI"}
+        </h1>
       </motion.header>
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col">
         {!hasMessages ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex-1 flex flex-col items-center justify-center"
-          >
-            {/* Welcome */}
+          <div className="flex-1 flex flex-col items-center justify-center">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 20 }}
-              className="p-4 rounded-2xl gradient-primary mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center"
             >
-              <Bot className="w-10 h-10 text-primary-foreground" />
-            </motion.div>
-            
-            <p className="text-muted-foreground text-sm mb-6 text-center max-w-xs">
-              Спроси что угодно — помогу с любым вопросом
-            </p>
-
-            {/* Quick actions */}
-            <QuickActions onActionClick={handleSend} />
-
-            {/* Style-specific welcome actions */}
-            <div className="mt-6">
-              <p className="text-xs text-muted-foreground text-center mb-3">
-                Или попробуй функции стилиста
+              <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center mx-auto mb-4">
+                <Bot className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Напиши что-нибудь, чтобы начать
               </p>
-              <ActionButtons
-                buttons={WELCOME_ACTIONS}
-                onAction={handleActionClick}
-              />
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         ) : (
           <div className="space-y-4">
             {messages.map((message) => (
@@ -131,7 +103,7 @@ export default function Chat() {
       </div>
 
       <ChatInput
-        onSend={handleSend}
+        onSend={sendMessage}
         isLoading={isLoading}
         onImageSelect={handleImageUpload}
         uploadedPhotoUrl={uploadedPhoto?.url}
