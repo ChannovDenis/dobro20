@@ -7,6 +7,13 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { useChat } from "@/hooks/useChat";
 import { ChatAction } from "@/types/chat";
 
+const SUGGESTIONS = [
+  { icon: "👗", text: "Подбери мне образ" },
+  { icon: "🎨", text: "Определи мой цветотип" },
+  { icon: "✨", text: "Что модно в 2026?" },
+  { icon: "💼", text: "Как одеться на собеседование" },
+];
+
 export default function Chat() {
   const {
     messages,
@@ -32,6 +39,10 @@ export default function Chat() {
     handleAction(action as ChatAction);
   };
 
+  const handleSuggestionClick = (text: string) => {
+    sendMessage(text);
+  };
+
   const hasMessages = messages.length > 0;
 
   return (
@@ -51,18 +62,40 @@ export default function Chat() {
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col">
         {!hasMessages ? (
-          <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="flex-1 flex flex-col items-center justify-center px-2">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center"
+              className="text-center mb-8"
             >
               <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center mx-auto mb-4">
                 <Bot className="w-6 h-6 text-primary-foreground" />
               </div>
               <p className="text-muted-foreground text-sm">
-                Напиши что-нибудь, чтобы начать
+                Чем могу помочь?
               </p>
+            </motion.div>
+
+            {/* Suggestion chips */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="w-full max-w-sm space-y-2"
+            >
+              {SUGGESTIONS.map((suggestion, index) => (
+                <motion.button
+                  key={suggestion.text}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + index * 0.05 }}
+                  onClick={() => handleSuggestionClick(suggestion.text)}
+                  className="w-full flex items-center gap-3 p-3 glass rounded-xl text-left hover:bg-secondary/30 transition-colors"
+                >
+                  <span className="text-lg">{suggestion.icon}</span>
+                  <span className="text-sm text-foreground">{suggestion.text}</span>
+                </motion.button>
+              ))}
             </motion.div>
           </div>
         ) : (
