@@ -1,11 +1,12 @@
 import { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Bot } from "lucide-react";
-import { BottomNav } from "@/components/layout/BottomNav";
+import { Sparkles, Bot, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useChat } from "@/hooks/useChat";
 import { ChatAction } from "@/types/chat";
+import { Button } from "@/components/ui/button";
 
 const SUGGESTIONS = [
   { icon: "⚖️", text: "Помоги с возвратом товара" },
@@ -17,6 +18,7 @@ const SUGGESTIONS = [
 ];
 
 export default function Chat() {
+  const navigate = useNavigate();
   const {
     messages,
     isLoading,
@@ -48,21 +50,32 @@ export default function Chat() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Minimal Header */}
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+      {/* Modal Header with close button */}
       <motion.header
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="flex items-center justify-center gap-2 px-4 py-3 safe-top border-b border-border/30"
+        className="flex items-center justify-between px-4 py-3 safe-top border-b border-border/30"
       >
-        <Sparkles className="w-4 h-4 text-primary" />
-        <h1 className="text-base font-medium text-foreground">
-          {isStyleMode ? "Стилист Лиза" : "Добросервис AI"}
-        </h1>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => navigate(-1)}
+          className="text-muted-foreground"
+        >
+          <X className="w-5 h-5" />
+        </Button>
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <h1 className="text-base font-medium text-foreground">
+            {isStyleMode ? "Стилист Лиза" : "Добросервис AI"}
+          </h1>
+        </div>
+        <div className="w-8" /> {/* Spacer for centering */}
       </motion.header>
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col">
+      <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 flex flex-col">
         {!hasMessages ? (
           <div className="flex-1 flex flex-col items-center justify-center px-2">
             <motion.div
@@ -144,7 +157,6 @@ export default function Chat() {
         uploadedPhotoUrl={uploadedPhoto?.url}
         onClearPhoto={clearUploadedPhoto}
       />
-      <BottomNav />
     </div>
   );
 }

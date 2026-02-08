@@ -4,11 +4,10 @@ import {
   Scale, Heart, Brain, Wallet, Dumbbell, Shield, 
   Dog, Sparkles, FileText, Calculator, Bot, Settings,
   ChevronRight, Crown, Bell, Gift, TrendingUp, Zap,
-  CreditCard, QrCode, Percent, Star, ArrowRight
+  CreditCard, QrCode, Percent, Star, ArrowRight, X
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BottomNav } from "@/components/layout/BottomNav";
 import { userProfile, services } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 
@@ -55,22 +54,31 @@ export default function Services() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header with profile */}
-      <header className="px-4 pt-4 pb-2 safe-top">
+    <div className="fixed inset-0 z-50 bg-background overflow-y-auto pb-8">
+      {/* Modal Header with close button */}
+      <header className="sticky top-0 z-10 px-4 pt-4 pb-2 safe-top bg-background/80 backdrop-blur-md border-b border-border/30">
         <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => navigate(-1)}
+            className="text-muted-foreground"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+          
           <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="flex items-center gap-3"
           >
-            <Avatar className="w-12 h-12 border-2 border-primary/30">
+            <Avatar className="w-10 h-10 border-2 border-primary/30">
               <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
               <AvatarFallback>{userProfile.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm text-muted-foreground">Привет,</p>
-              <h1 className="text-lg font-bold text-foreground">{userProfile.name.split(" ")[0]}</h1>
+              <p className="text-xs text-muted-foreground">Привет,</p>
+              <h1 className="text-sm font-bold text-foreground">{userProfile.name.split(" ")[0]}</h1>
             </div>
           </motion.div>
           
@@ -248,8 +256,6 @@ export default function Services() {
           </div>
         </motion.div>
       </section>
-
-      <BottomNav />
     </div>
   );
 }
