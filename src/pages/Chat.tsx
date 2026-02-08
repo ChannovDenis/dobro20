@@ -1,11 +1,12 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Bot, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useChat } from "@/hooks/useChat";
 import { ChatAction } from "@/types/chat";
+import { useTenant } from "@/hooks/useTenant";
 
 
 const SUGGESTIONS = [
@@ -20,6 +21,14 @@ const SUGGESTIONS = [
 
 export default function Chat() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { tenant } = useTenant();
+  
+  // Read context from URL params
+  const contextParam = searchParams.get("context");
+  const promptParam = searchParams.get("prompt");
+  const [context, setContext] = useState<string | null>(contextParam);
+  
   const {
     messages,
     isLoading,
@@ -53,8 +62,18 @@ export default function Chat() {
   const handleClose = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    // Clear URL params when closing
+    setSearchParams({});
     navigate('/feed');
   };
+
+  const clearContext = () => {
+    setContext(null);
+    setSearchParams({});
+  };
+
+  // Get AI name from tenant config or use default
+  const aiName = isStyleMode ? "Стилист Лиза" : (tenant?.ai_name || "Добросервис AI");
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -74,7 +93,7 @@ export default function Chat() {
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
           <h1 className="text-base font-medium text-foreground">
-            {isStyleMode ? "Стилист Лиза" : "Добросервис AI"}
+            {aiName}
           </h1>
         </div>
         <div className="w-8" /> {/* Spacer for centering */}
@@ -82,6 +101,25 @@ export default function Chat() {
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 flex flex-col">
+        {/* Context badge */}
+        {context && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-2 glass rounded-xl text-sm">
+              <span className="text-muted-foreground">Контекст:</span>
+              <span className="text-foreground font-medium truncate max-w-[200px]">{context}</span>
+              <button
+                onClick={clearContext}
+                className="p-0.5 rounded-full hover:bg-secondary/50 text-muted-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
         {!hasMessages ? (
           <div className="flex-1 flex flex-col items-center justify-center px-2">
             <motion.div
@@ -162,6 +200,7 @@ export default function Chat() {
         onImageSelect={handleImageUpload}
         uploadedPhotoUrl={uploadedPhoto?.url}
         onClearPhoto={clearUploadedPhoto}
+        initialPrompt={promptParam || undefined}
       />
     </div>
   );
