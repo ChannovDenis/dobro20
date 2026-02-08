@@ -1,14 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Star, Clock, Calendar } from "lucide-react";
-import { Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, Bot } from "lucide-react";
+import { Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, Bot, Sprout } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { services, experts } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, React.ElementType> = {
-  Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, Bot,
+  Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, Bot, Sprout,
 };
 
 export default function ServiceDetail() {
