@@ -1,178 +1,122 @@
 import { motion } from "framer-motion";
 import { 
-  User, Bell, Shield, Info, ChevronRight, 
-  Crown, Settings as SettingsIcon, LogOut 
+  Crown, Bell, Shield, Info, LogOut,
+  Moon, Globe, Trash2, ExternalLink,
+  Instagram, Send
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { userProfile, services } from "@/data/mockData";
+import { ProfileHeader } from "@/components/settings/ProfileHeader";
+import { SuperAppGrid } from "@/components/settings/SuperAppGrid";
+import { SettingsSection, SettingsItem } from "@/components/settings/SettingsSection";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 
 export default function Settings() {
-  const [enabledServices, setEnabledServices] = useState<string[]>(
-    services.map(s => s.id)
-  );
   const [notifications, setNotifications] = useState({
     push: true,
     email: false,
     promotions: true,
   });
 
-  const toggleService = (serviceId: string) => {
-    setEnabledServices(prev => 
-      prev.includes(serviceId)
-        ? prev.filter(id => id !== serviceId)
-        : [...prev, serviceId]
-    );
-  };
-
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-4 py-4 safe-top"
-      >
-        <h1 className="text-2xl font-bold text-foreground">Настройки</h1>
-      </motion.header>
+      {/* Profile Hero */}
+      <ProfileHeader />
 
-      <div className="space-y-6 px-4">
-        {/* Profile Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-4"
-        >
-          <div className="flex items-center gap-4">
-            <Avatar className="w-16 h-16 border-2 border-primary/30">
-              <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
-              <AvatarFallback>{userProfile.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold text-foreground">{userProfile.name}</h2>
-              <div className="flex items-center gap-2 mt-1">
-                <Crown className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm text-primary">{userProfile.subscription}</span>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </div>
-        </motion.div>
+      {/* SuperApp Grid */}
+      <div className="mb-6">
+        <h3 className="text-sm font-medium text-muted-foreground px-4 mb-3">
+          Сервисы
+        </h3>
+        <SuperAppGrid />
+      </div>
 
-        {/* Services Management */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-            <SettingsIcon className="w-4 h-4" />
-            Управление сервисами
-          </h3>
-          <div className="glass-card divide-y divide-border">
-            {services.slice(0, 5).map((service) => (
-              <div key={service.id} className="flex items-center justify-between p-4">
-                <span className="text-sm font-medium text-foreground">{service.name}</span>
-                <Switch
-                  checked={enabledServices.includes(service.id)}
-                  onCheckedChange={() => toggleService(service.id)}
-                />
-              </div>
-            ))}
-          </div>
-        </motion.div>
+      {/* Settings Sections */}
+      <div className="space-y-3 px-4">
+        {/* Subscription */}
+        <SettingsSection icon={<Crown className="w-5 h-5" />} title="Подписка">
+          <SettingsItem label="Премиум статус" value="Активна" />
+          <SettingsItem label="Продлить подписку" />
+          <SettingsItem label="История платежей" />
+        </SettingsSection>
 
         {/* Notifications */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-            <Bell className="w-4 h-4" />
-            Уведомления
-          </h3>
-          <div className="glass-card divide-y divide-border">
-            <div className="flex items-center justify-between p-4">
-              <span className="text-sm font-medium text-foreground">Push-уведомления</span>
-              <Switch
-                checked={notifications.push}
-                onCheckedChange={(checked) => setNotifications({ ...notifications, push: checked })}
-              />
-            </div>
-            <div className="flex items-center justify-between p-4">
-              <span className="text-sm font-medium text-foreground">Email-рассылка</span>
-              <Switch
-                checked={notifications.email}
-                onCheckedChange={(checked) => setNotifications({ ...notifications, email: checked })}
-              />
-            </div>
-            <div className="flex items-center justify-between p-4">
-              <span className="text-sm font-medium text-foreground">Акции и скидки</span>
-              <Switch
-                checked={notifications.promotions}
-                onCheckedChange={(checked) => setNotifications({ ...notifications, promotions: checked })}
-              />
-            </div>
+        <SettingsSection icon={<Bell className="w-5 h-5" />} title="Уведомления" defaultOpen>
+          <div className="flex items-center justify-between p-4">
+            <span className="text-sm font-medium text-foreground">Push-уведомления</span>
+            <Switch
+              checked={notifications.push}
+              onCheckedChange={(checked) => setNotifications({ ...notifications, push: checked })}
+            />
           </div>
-        </motion.div>
+          <div className="flex items-center justify-between p-4">
+            <span className="text-sm font-medium text-foreground">Email-рассылка</span>
+            <Switch
+              checked={notifications.email}
+              onCheckedChange={(checked) => setNotifications({ ...notifications, email: checked })}
+            />
+          </div>
+          <div className="flex items-center justify-between p-4">
+            <span className="text-sm font-medium text-foreground">Акции и скидки</span>
+            <Switch
+              checked={notifications.promotions}
+              onCheckedChange={(checked) => setNotifications({ ...notifications, promotions: checked })}
+            />
+          </div>
+        </SettingsSection>
 
         {/* Security */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            Безопасность
-          </h3>
-          <div className="glass-card divide-y divide-border">
-            <button className="flex items-center justify-between p-4 w-full text-left">
-              <span className="text-sm font-medium text-foreground">Сменить пароль</span>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <button className="flex items-center justify-between p-4 w-full text-left">
-              <span className="text-sm font-medium text-foreground">Устройства</span>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-            </button>
-          </div>
-        </motion.div>
+        <SettingsSection icon={<Shield className="w-5 h-5" />} title="Безопасность">
+          <SettingsItem label="Сменить пароль" />
+          <SettingsItem label="Активные устройства" value="2" />
+          <SettingsItem label="Двухфакторная аутентификация" />
+        </SettingsSection>
+
+        {/* App Settings */}
+        <SettingsSection icon={<Moon className="w-5 h-5" />} title="Приложение">
+          <SettingsItem label="Тема" value="Тёмная" />
+          <SettingsItem 
+            label="Язык" 
+            value="Русский" 
+            action={<Globe className="w-4 h-4 text-muted-foreground" />}
+          />
+          <SettingsItem 
+            label="Очистить кэш" 
+            action={<Trash2 className="w-4 h-4 text-muted-foreground" />}
+          />
+        </SettingsSection>
 
         {/* About */}
+        <SettingsSection icon={<Info className="w-5 h-5" />} title="О приложении">
+          <SettingsItem label="Версия" value="1.0.0" />
+          <SettingsItem 
+            label="Политика конфиденциальности" 
+            action={<ExternalLink className="w-4 h-4 text-muted-foreground" />}
+          />
+          <SettingsItem 
+            label="Условия использования" 
+            action={<ExternalLink className="w-4 h-4 text-muted-foreground" />}
+          />
+        </SettingsSection>
+
+        {/* Social Links */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          className="flex justify-center gap-4 py-4"
         >
-          <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-            <Info className="w-4 h-4" />
-            О приложении
-          </h3>
-          <div className="glass-card divide-y divide-border">
-            <div className="flex items-center justify-between p-4">
-              <span className="text-sm font-medium text-foreground">Версия</span>
-              <span className="text-sm text-muted-foreground">1.0.0</span>
-            </div>
-            <button className="flex items-center justify-between p-4 w-full text-left">
-              <span className="text-sm font-medium text-foreground">Политика конфиденциальности</span>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <button className="flex items-center justify-between p-4 w-full text-left">
-              <span className="text-sm font-medium text-foreground">Условия использования</span>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-            </button>
-          </div>
+          <button className="p-3 rounded-full glass text-muted-foreground hover:text-foreground transition-colors">
+            <Instagram className="w-5 h-5" />
+          </button>
+          <button className="p-3 rounded-full glass text-muted-foreground hover:text-foreground transition-colors">
+            <Send className="w-5 h-5" />
+          </button>
         </motion.div>
 
         {/* Logout */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
           whileTap={{ scale: 0.98 }}
           className="w-full glass-card p-4 flex items-center justify-center gap-2 text-destructive"
         >
