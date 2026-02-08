@@ -8,7 +8,6 @@ import Feed from "./pages/Feed";
 import Chat from "./pages/Chat";
 import Services from "./pages/Services";
 import Settings from "./pages/Settings";
-import Stylist from "./pages/Stylist";
 import ServiceDetail from "./pages/ServiceDetail";
 import MiniApp from "./pages/MiniApp";
 import NotFound from "./pages/NotFound";
@@ -28,7 +27,6 @@ const App = () => (
           <Route path="/chat" element={<Chat />} />
           <Route path="/services" element={<Services />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/stylist" element={<Stylist />} />
           <Route path="/service/:id" element={<ServiceDetail />} />
           <Route path="/mini-app/:id" element={<MiniApp />} />
           <Route path="*" element={<NotFound />} />

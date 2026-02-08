@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Share2, Bookmark, ChevronUp, Volume2, VolumeX } from "lucide-react";
+import { Heart, Share2, Volume2, VolumeX } from "lucide-react";
 import { FeedItem } from "@/data/mockData";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
@@ -17,7 +17,6 @@ function formatNumber(num: number): string {
 
 export function FeedCard({ item, isActive }: FeedCardProps) {
   const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [muted, setMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -146,71 +145,23 @@ export function FeedCard({ item, isActive }: FeedCardProps) {
         )}
       </div>
 
-      {/* Right side actions */}
+      {/* Minimal right side actions - only Like and Share */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={isActive ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
         transition={{ delay: 0.4 }}
-        className="absolute right-4 bottom-32 flex flex-col items-center gap-5"
+        className="absolute right-4 bottom-32 flex flex-col items-center gap-4"
       >
-        {/* Like */}
         <button
           onClick={() => setLiked(!liked)}
-          className="flex flex-col items-center gap-1"
+          className={`p-2.5 rounded-full glass/60 backdrop-blur-sm ${liked ? "text-destructive" : "text-foreground/80"}`}
         >
-          <div className={`p-3 rounded-full glass ${liked ? "text-destructive" : "text-foreground"}`}>
-            <Heart className={`w-6 h-6 ${liked ? "fill-current" : ""}`} />
-          </div>
-          <span className="text-xs font-medium text-foreground">
-            {formatNumber(item.likes + (liked ? 1 : 0))}
-          </span>
+          <Heart className={`w-5 h-5 ${liked ? "fill-current" : ""}`} />
         </button>
 
-        {/* Comments */}
-        <button className="flex flex-col items-center gap-1">
-          <div className="p-3 rounded-full glass text-foreground">
-            <MessageCircle className="w-6 h-6" />
-          </div>
-          <span className="text-xs font-medium text-foreground">
-            {formatNumber(item.comments)}
-          </span>
+        <button className="p-2.5 rounded-full glass/60 backdrop-blur-sm text-foreground/80">
+          <Share2 className="w-5 h-5" />
         </button>
-
-        {/* Share */}
-        <button className="flex flex-col items-center gap-1">
-          <div className="p-3 rounded-full glass text-foreground">
-            <Share2 className="w-6 h-6" />
-          </div>
-          <span className="text-xs font-medium text-foreground">
-            {formatNumber(item.shares)}
-          </span>
-        </button>
-
-        {/* Bookmark */}
-        <button
-          onClick={() => setSaved(!saved)}
-          className="flex flex-col items-center gap-1"
-        >
-          <div className={`p-3 rounded-full glass ${saved ? "text-primary" : "text-foreground"}`}>
-            <Bookmark className={`w-6 h-6 ${saved ? "fill-current" : ""}`} />
-          </div>
-        </button>
-      </motion.div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={isActive ? { opacity: 1 } : { opacity: 0 }}
-        className="absolute bottom-20 left-1/2 -translate-x-1/2"
-      >
-        <motion.div
-          animate={{ y: [0, -8, 0] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-          className="flex flex-col items-center gap-1 text-muted-foreground"
-        >
-          <ChevronUp className="w-5 h-5" />
-          <span className="text-xs">Листай</span>
-        </motion.div>
       </motion.div>
     </div>
   );

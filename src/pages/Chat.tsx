@@ -6,9 +6,21 @@ import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { QuickActions } from "@/components/chat/QuickActions";
 import { useChat } from "@/hooks/useChat";
+import { ChatAction } from "@/types/chat";
+import { WELCOME_ACTIONS } from "@/constants/chatActions";
+import { ActionButtons } from "@/components/chat/ActionButtons";
 
 export default function Chat() {
-  const { messages, isLoading, sendMessage } = useChat();
+  const {
+    messages,
+    isLoading,
+    isStyleMode,
+    uploadedPhoto,
+    sendMessage,
+    handleAction,
+    handleImageUpload,
+    clearUploadedPhoto,
+  } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -23,11 +35,15 @@ export default function Chat() {
     sendMessage(content);
   };
 
+  const handleActionClick = (action: string) => {
+    handleAction(action as ChatAction);
+  };
+
   const hasMessages = messages.length > 0;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Minimal Header */}
+      {/* Header */}
       <motion.header
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -35,7 +51,9 @@ export default function Chat() {
       >
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          <h1 className="text-lg font-semibold text-foreground">Добросервис AI</h1>
+          <h1 className="text-lg font-semibold text-foreground">
+            {isStyleMode ? "Стилист Лиза" : "Добросервис AI"}
+          </h1>
         </div>
       </motion.header>
 
@@ -47,7 +65,7 @@ export default function Chat() {
             animate={{ opacity: 1 }}
             className="flex-1 flex flex-col items-center justify-center"
           >
-            {/* Clean welcome */}
+            {/* Welcome */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -57,17 +75,32 @@ export default function Chat() {
               <Bot className="w-10 h-10 text-primary-foreground" />
             </motion.div>
             
-            <p className="text-muted-foreground text-sm mb-8 text-center max-w-xs">
+            <p className="text-muted-foreground text-sm mb-6 text-center max-w-xs">
               Спроси что угодно — помогу с любым вопросом
             </p>
 
-            {/* Compact quick actions */}
+            {/* Quick actions */}
             <QuickActions onActionClick={handleSend} />
+
+            {/* Style-specific welcome actions */}
+            <div className="mt-6">
+              <p className="text-xs text-muted-foreground text-center mb-3">
+                Или попробуй функции стилиста
+              </p>
+              <ActionButtons
+                buttons={WELCOME_ACTIONS}
+                onAction={handleActionClick}
+              />
+            </div>
           </motion.div>
         ) : (
           <div className="space-y-4">
             {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
+              <ChatMessage
+                key={message.id}
+                message={message}
+                onAction={handleActionClick}
+              />
             ))}
             {isLoading && (
               <motion.div
@@ -97,7 +130,13 @@ export default function Chat() {
         )}
       </div>
 
-      <ChatInput onSend={handleSend} isLoading={isLoading} />
+      <ChatInput
+        onSend={handleSend}
+        isLoading={isLoading}
+        onImageSelect={handleImageUpload}
+        uploadedPhotoUrl={uploadedPhoto?.url}
+        onClearPhoto={clearUploadedPhoto}
+      />
       <BottomNav />
     </div>
   );
