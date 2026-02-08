@@ -23,16 +23,35 @@ const THEMES = [
   },
 ];
 
+// Apply theme immediately via CSS variables (no DB dependency)
+function applyThemeLocally(slug: string) {
+  const theme = THEMES.find(t => t.slug === slug);
+  if (!theme) return;
+  
+  const root = document.documentElement;
+  root.setAttribute('data-tenant', slug);
+  root.style.setProperty('--primary', theme.color);
+  root.style.setProperty('--ring', theme.color);
+  root.style.setProperty('--glow-primary', `${theme.color} / 0.4`);
+}
+
 export function ThemeSwitcher() {
   const { tenant, setTenantBySlug } = useTenant();
-  const currentSlug = tenant?.slug || "dobro";
+  
+  // Get current slug from data-tenant attribute for reliability
+  const currentSlug = document.documentElement.getAttribute('data-tenant') || tenant?.slug || "dobro";
 
   const handleThemeChange = (slug: string) => {
-    setTenantBySlug(slug);
+    // Apply theme immediately (local CSS)
+    applyThemeLocally(slug);
+    
     // Update URL param for persistence
     const url = new URL(window.location.href);
     url.searchParams.set('tenant', slug);
     window.history.replaceState({}, '', url.toString());
+    
+    // Also try to update via context (for DB sync if available)
+    setTenantBySlug(slug);
   };
 
   return (
