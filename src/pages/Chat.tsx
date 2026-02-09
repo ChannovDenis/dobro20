@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Bot, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
@@ -8,16 +8,22 @@ import { SuggestionTicker } from "@/components/chat/SuggestionTicker";
 import { useChat } from "@/hooks/useChat";
 import { ChatAction } from "@/types/chat";
 import { useTenant } from "@/hooks/useTenant";
+import { getAssistant } from "@/constants/aiAssistants";
 
 export default function Chat() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { tenant } = useTenant();
   
-  // Read context from URL params
+  // Read context and service from URL params
   const contextParam = searchParams.get("context");
   const promptParam = searchParams.get("prompt");
+  const serviceParam = searchParams.get("service");
   const [context, setContext] = useState<string | null>(contextParam);
+  
+  // Get the appropriate AI assistant based on service
+  const assistant = getAssistant(serviceParam);
+  const AssistantIcon = assistant.icon;
   
   const {
     messages,
@@ -54,7 +60,12 @@ export default function Chat() {
     e.stopPropagation();
     // Clear URL params when closing
     setSearchParams({});
-    navigate('/feed');
+    // Navigate back if possible, otherwise to feed
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/feed');
+    }
   };
 
   const clearContext = () => {
@@ -62,8 +73,10 @@ export default function Chat() {
     setSearchParams({});
   };
 
-  // Get AI name from tenant config or use default
-  const aiName = isStyleMode ? "Стилист Лиза" : (tenant?.ai_name || "Добросервис AI");
+  // Get AI name: service-specific > style mode > tenant config > default
+  const aiName = isStyleMode 
+    ? "Стилист Лиза" 
+    : (serviceParam ? assistant.name : (tenant?.ai_name || "Добро-ассистент"));
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -81,12 +94,15 @@ export default function Chat() {
           <X className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-primary" />
+          <AssistantIcon 
+            className="w-5 h-5" 
+            style={{ color: `hsl(${assistant.color})` }} 
+          />
           <h1 className="text-base font-medium text-foreground">
             {aiName}
           </h1>
         </div>
-        <div className="w-8" /> {/* Spacer for centering */}
+        <div className="w-9" /> {/* Spacer for centering */}
       </motion.header>
 
       {/* Chat area */}
@@ -117,16 +133,22 @@ export default function Chat() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center mb-8"
             >
-              <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center mx-auto mb-4">
-                <Bot className="w-6 h-6 text-primary-foreground" />
+              <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ background: `linear-gradient(135deg, hsl(${assistant.color}), hsl(${assistant.color} / 0.7))` }}
+              >
+                <AssistantIcon className="w-6 h-6 text-white" />
               </div>
               <p className="text-muted-foreground text-sm">
                 Чем могу помочь?
               </p>
             </motion.div>
 
-            {/* Suggestion ticker */}
-            <SuggestionTicker onSuggestionClick={handleSuggestionClick} />
+            {/* Suggestion ticker - service-specific or default */}
+            <SuggestionTicker 
+              onSuggestionClick={handleSuggestionClick} 
+              serviceId={serviceParam || undefined}
+            />
           </div>
         ) : (
           <div className="space-y-4">
@@ -143,8 +165,11 @@ export default function Chat() {
                 animate={{ opacity: 1 }}
                 className="flex gap-3"
               >
-                <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-primary-foreground" />
+                <div 
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: `linear-gradient(135deg, hsl(${assistant.color}), hsl(${assistant.color} / 0.7))` }}
+                >
+                  <AssistantIcon className="w-4 h-4 text-white" />
                 </div>
                 <div className="glass-card rounded-2xl rounded-tl-md px-4 py-3">
                   <div className="flex gap-1">

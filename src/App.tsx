@@ -14,6 +14,7 @@ import ExpertDetail from "./pages/ExpertDetail";
 import MiniApp from "./pages/MiniApp";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
+import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/splash" element={<SplashScreen />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/history" element={<History />} />
             <Route path="/services" element={<Services />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/service/:id" element={<ServiceDetail />} />

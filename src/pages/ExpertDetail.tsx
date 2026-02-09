@@ -3,11 +3,13 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Star, Phone, Video, MessageSquare, FileText, Briefcase, Users, Calendar } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { experts } from "@/data/mockData";
+import { experts, services } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { addDays, format, isToday, isTomorrow } from "date-fns";
 import { ru } from "date-fns/locale";
+import { toast } from "sonner";
+import { saveBooking, Booking } from "@/types/booking";
 
 type ConsultationType = "online" | "chat";
 
@@ -21,6 +23,7 @@ export default function ExpertDetail() {
 
   const serviceExperts = experts[id || ""] || [];
   const expert = serviceExperts.find(e => e.id === expertId);
+  const service = services.find(s => s.id === id);
 
   // Generate next 7 days
   const dates = useMemo(() => {
@@ -45,9 +48,34 @@ export default function ExpertDetail() {
 
   const handleBooking = () => {
     if (!selectedTime) return;
-    // TODO: Implement actual booking
-    alert(`Запись к ${expert.name} на ${format(selectedDate, "d MMMM", { locale: ru })} в ${selectedTime}`);
-    navigate(-1);
+    
+    // Create booking object
+    const booking: Booking = {
+      id: crypto.randomUUID(),
+      expertId: expert.id,
+      expertName: expert.name,
+      specialty: expert.specialty,
+      serviceId: id || "",
+      serviceName: service?.name || "",
+      date: format(selectedDate, "yyyy-MM-dd"),
+      time: selectedTime,
+      type: consultationType,
+      price: price,
+      status: "upcoming",
+      createdAt: new Date().toISOString(),
+    };
+    
+    // Save to localStorage
+    saveBooking(booking);
+    
+    // Show success toast
+    toast.success(
+      `Записано! Консультация ${format(selectedDate, "d MMMM", { locale: ru })} в ${selectedTime}`,
+      { duration: 4000 }
+    );
+    
+    // Navigate to history
+    navigate("/history");
   };
 
   return (
