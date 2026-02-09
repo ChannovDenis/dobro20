@@ -7,11 +7,15 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { SuggestionTicker } from "@/components/chat/SuggestionTicker";
 import { TopicContextBar } from "@/components/chat/TopicContextBar";
 import { ExpertButton } from "@/components/chat/ExpertButton";
+import { DeleteTopicDialog } from "@/components/chat/DeleteTopicDialog";
+import { ClearMessagesDialog } from "@/components/chat/ClearMessagesDialog";
+import { RenameTopicDialog } from "@/components/chat/RenameTopicDialog";
 import { useChat } from "@/hooks/useChat";
 import { useTopics, Topic } from "@/hooks/useTopics";
 import { ChatAction } from "@/types/chat";
 import { useTenant } from "@/hooks/useTenant";
 import { getAssistant } from "@/constants/aiAssistants";
+import { toast } from "sonner";
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -33,7 +37,16 @@ export default function Chat() {
     selectTopic,
     fetchTopics,
     topics,
+    updateTopicTitle,
+    updateTopicStatus,
+    clearMessages: clearTopicMessages,
+    deleteTopic,
   } = useTopics({ autoLoad: true });
+  
+  // Dialog states
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   
   // Get the appropriate AI assistant based on service
   const currentService = currentTopic?.service_type || serviceParam;
@@ -113,6 +126,41 @@ export default function Chat() {
     setSearchParams({});
   };
 
+  // Topic action handlers
+  const handleRename = async (newTitle: string) => {
+    if (currentTopic) {
+      await updateTopicTitle(currentTopic.id, newTitle);
+      toast.success("Чат переименован");
+    }
+  };
+
+  const handleClearMessages = async () => {
+    if (currentTopic) {
+      const success = await clearTopicMessages(currentTopic.id);
+      if (success) {
+        toast.success("Сообщения очищены");
+      }
+    }
+  };
+
+  const handleArchive = async () => {
+    if (currentTopic) {
+      const newStatus = currentTopic.status === 'archived' ? 'active' : 'archived';
+      await updateTopicStatus(currentTopic.id, newStatus);
+      toast.success(newStatus === 'archived' ? "Чат в архиве" : "Чат восстановлен");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (currentTopic) {
+      const success = await deleteTopic(currentTopic.id);
+      if (success) {
+        toast.success("Чат удалён");
+        navigate('/feed');
+      }
+    }
+  };
+
   // Get AI name: service-specific > style mode > tenant config > default
   const aiName = isStyleMode 
     ? "Стилист Лиза" 
@@ -151,8 +199,31 @@ export default function Chat() {
         <TopicContextBar 
           topic={currentTopic} 
           messageCount={messages.length}
+          onRename={() => setRenameDialogOpen(true)}
+          onClearMessages={() => setClearDialogOpen(true)}
+          onArchive={handleArchive}
+          onDelete={() => setDeleteDialogOpen(true)}
         />
       )}
+
+      {/* Dialogs */}
+      <DeleteTopicDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        topicTitle={currentTopic?.title || ""}
+        onConfirm={handleDelete}
+      />
+      <ClearMessagesDialog
+        open={clearDialogOpen}
+        onOpenChange={setClearDialogOpen}
+        onConfirm={handleClearMessages}
+      />
+      <RenameTopicDialog
+        open={renameDialogOpen}
+        onOpenChange={setRenameDialogOpen}
+        currentTitle={currentTopic?.title || ""}
+        onConfirm={handleRename}
+      />
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 flex flex-col">
