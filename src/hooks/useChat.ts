@@ -1,15 +1,15 @@
 import { useState, useCallback, useEffect } from "react";
-import { Message, ChatAction, ColorPaletteData, TrendItem, EscalationData } from "@/types/chat";
+import { Message, ChatAction, ColorPaletteData, EscalationData } from "@/types/chat";
 import { detectStyleMode, getContextualActions } from "@/constants/chatActions";
 import { getNextTrends } from "@/constants/trends";
 import { getSessionId } from "@/lib/session";
+import { getSupabaseWithSession } from "@/lib/supabaseWithSession";
 
 const LISA_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lisa-stylist`;
 const COLORTYPE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/colortype-analyzer`;
 const TRYON_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/virtual-tryon`;
 
-const STORAGE_KEY = 'dobro-chat-history';
-const ESCALATION_THRESHOLD = 5; // Show escalation after N messages
+const ESCALATION_THRESHOLD = 5;
 
 // Helper to get auth headers with session ID
 function getAuthHeaders(): Record<string, string> {
@@ -20,34 +20,117 @@ function getAuthHeaders(): Record<string, string> {
   };
 }
 
+// Convert DB message to local Message format
+interface DBMessage {
+  id: string;
+  role: "user" | "assistant" | "system" | "expert";
+  content: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string | null;
+}
+
+function dbMessageToLocal(dbMsg: DBMessage): Message {
+  const metadata = dbMsg.metadata || {};
+  return {
+    id: crypto.randomUUID(),
+    dbId: dbMsg.id,
+    role: dbMsg.role === "user" ? "user" : "assistant",
+    content: dbMsg.content,
+    imageUrl: metadata.imageUrl as string | undefined,
+    resultImageUrl: metadata.resultImageUrl as string | undefined,
+    beforeImageUrl: metadata.beforeImageUrl as string | undefined,
+    buttons: metadata.buttons as Message["buttons"],
+    colorPalette: metadata.colorPalette as Message["colorPalette"],
+    trendGallery: metadata.trendGallery as Message["trendGallery"],
+    clothingOptions: metadata.clothingOptions as Message["clothingOptions"],
+    escalation: metadata.escalation as Message["escalation"],
+  };
+}
+
 export function useChat() {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStyleMode, setIsStyleMode] = useState(false);
   const [uploadedPhoto, setUploadedPhoto] = useState<{ file: File; url: string } | null>(null);
   const [lastAction, setLastAction] = useState<string | undefined>();
   const [serviceType, setServiceType] = useState<string | null>(null);
   const [topicId, setTopicId] = useState<string | null>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Persist messages to localStorage
+  // Load messages from DB when topicId changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  }, [messages]);
-
-  // Clear messages when topic changes
-  useEffect(() => {
-    if (topicId) {
-      // New topic - clear local messages
+    if (!topicId) {
       setMessages([]);
+      return;
     }
+
+    const loadMessagesFromDB = async () => {
+      setIsLoadingHistory(true);
+      try {
+        const supabase = getSupabaseWithSession();
+        const { data, error } = await supabase
+          .from("topic_messages")
+          .select("*")
+          .eq("topic_id", topicId)
+          .order("created_at", { ascending: true });
+
+        if (error) {
+          console.error("Error loading messages:", error);
+          return;
+        }
+
+        if (data) {
+          const loadedMessages = data.map((m) => dbMessageToLocal(m as DBMessage));
+          setMessages(loadedMessages);
+        }
+      } catch (err) {
+        console.error("Failed to load messages:", err);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadMessagesFromDB();
   }, [topicId]);
+
+  // Save message to database
+  const saveMessageToDB = useCallback(
+    async (
+      role: "user" | "assistant",
+      content: string,
+      metadata?: Record<string, unknown>
+    ): Promise<string | null> => {
+      if (!topicId) {
+        console.warn("No topic selected, cannot save message");
+        return null;
+      }
+
+      try {
+        const supabase = getSupabaseWithSession();
+        const { data, error } = await supabase
+          .from("topic_messages")
+          .insert([{
+            topic_id: topicId,
+            role,
+            content,
+            metadata: metadata as unknown as null,
+          }])
+          .select("id")
+          .single();
+
+        if (error) {
+          console.error("Error saving message:", error);
+          return null;
+        }
+
+        return data?.id || null;
+      } catch (err) {
+        console.error("Failed to save message:", err);
+        return null;
+      }
+    },
+    [topicId]
+  );
 
   const addMessage = useCallback((message: Omit<Message, "id">) => {
     const newMessage: Message = {
@@ -140,12 +223,17 @@ export function useChat() {
 
   const sendMessage = useCallback(
     async (content: string) => {
+      if (!topicId) {
+        console.warn("No topic selected");
+        return;
+      }
+
       // Detect style mode from keywords
       if (detectStyleMode(content)) {
         setIsStyleMode(true);
       }
 
-      // Add user message
+      // Add user message locally
       const userMessage: Message = {
         id: crypto.randomUUID(),
         role: "user",
@@ -154,6 +242,13 @@ export function useChat() {
       };
       setMessages((prev) => [...prev, userMessage]);
       setIsLoading(true);
+
+      // Save user message to DB
+      const userMetadata: Record<string, unknown> = {};
+      if (uploadedPhoto?.url) {
+        userMetadata.imageUrl = uploadedPhoto.url;
+      }
+      await saveMessageToDB("user", content, Object.keys(userMetadata).length > 0 ? userMetadata : undefined);
 
       // Build conversation history
       const history = [...messages, userMessage].map((m) => ({
@@ -168,31 +263,40 @@ export function useChat() {
         );
 
         // Add contextual action buttons and escalation
-        if (messageId) {
-          const buttons = getContextualActions({
-            hasPhoto: !!uploadedPhoto,
-            lastAction,
-            isStyleMode,
-          });
-          
-          // Check if we should show escalation (after threshold messages)
-          const totalMessages = messages.length + 2; // +2 for user + assistant
-          let escalation: EscalationData | undefined;
-          
-          if (serviceType && totalMessages >= ESCALATION_THRESHOLD) {
-            escalation = {
-              serviceId: serviceType,
-            };
-          }
-          
-          const updates: Partial<Message> = {};
-          if (buttons.length > 0) updates.buttons = buttons;
-          if (escalation) updates.escalation = escalation;
-          
-          if (Object.keys(updates).length > 0) {
-            updateMessage(messageId, updates);
-          }
+        const buttons = getContextualActions({
+          hasPhoto: !!uploadedPhoto,
+          lastAction,
+          isStyleMode,
+        });
+
+        // Check if we should show escalation (after threshold messages)
+        const totalMessages = messages.length + 2;
+        let escalation: EscalationData | undefined;
+
+        if (serviceType && totalMessages >= ESCALATION_THRESHOLD) {
+          escalation = {
+            serviceId: serviceType,
+          };
         }
+
+        const updates: Partial<Message> = {};
+        if (buttons.length > 0) updates.buttons = buttons;
+        if (escalation) updates.escalation = escalation;
+
+        if (messageId && Object.keys(updates).length > 0) {
+          updateMessage(messageId, updates);
+        }
+
+        // Save assistant message to DB with metadata
+        const assistantMetadata: Record<string, unknown> = {};
+        if (buttons.length > 0) assistantMetadata.buttons = buttons;
+        if (escalation) assistantMetadata.escalation = escalation;
+        
+        await saveMessageToDB(
+          "assistant",
+          assistantContent,
+          Object.keys(assistantMetadata).length > 0 ? assistantMetadata : undefined
+        );
 
         // Clear uploaded photo after sending
         if (uploadedPhoto) {
@@ -208,7 +312,7 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [messages, isStyleMode, uploadedPhoto, lastAction, serviceType, addMessage, updateMessage]
+    [messages, isStyleMode, uploadedPhoto, lastAction, serviceType, topicId, addMessage, updateMessage, saveMessageToDB]
   );
 
   const handleAction = useCallback(
@@ -220,10 +324,9 @@ export function useChat() {
         switch (action) {
           case "tryon":
             if (!uploadedPhoto) {
-              addMessage({
-                role: "assistant",
-                content: "👗 Для виртуальной примерки мне нужно твоё фото! Загрузи селфи или фото в полный рост, и я покажу, как на тебе будут смотреться разные образы ✨",
-              });
+              const content = "👗 Для виртуальной примерки мне нужно твоё фото! Загрузи селфи или фото в полный рост, и я покажу, как на тебе будут смотреться разные образы ✨";
+              addMessage({ role: "assistant", content });
+              await saveMessageToDB("assistant", content);
             } else {
               const tryonResponse = await fetch(TRYON_URL, {
                 method: "POST",
@@ -239,23 +342,29 @@ export function useChat() {
                 throw new Error("Ошибка примерки");
               }
               const result = await tryonResponse.json();
+              const buttons = getContextualActions({ hasPhoto: true, lastAction: "tryon", isStyleMode: true });
 
+              const content = `✨ Вот как ты выглядишь в образе "${result.description}"! Нравится? Могу показать другие стили 👗`;
               addMessage({
                 role: "assistant",
-                content: `✨ Вот как ты выглядишь в образе "${result.description}"! Нравится? Могу показать другие стили 👗`,
+                content,
                 resultImageUrl: result.imageUrl,
                 beforeImageUrl: uploadedPhoto.url,
-                buttons: getContextualActions({ hasPhoto: true, lastAction: "tryon", isStyleMode: true }),
+                buttons,
+              });
+              await saveMessageToDB("assistant", content, {
+                resultImageUrl: result.imageUrl,
+                beforeImageUrl: uploadedPhoto.url,
+                buttons,
               });
             }
             break;
 
           case "colortype":
             if (!uploadedPhoto) {
-              addMessage({
-                role: "assistant",
-                content: "🎨 Для анализа цветотипа нужно твоё фото при дневном освещении. Загрузи фото лица, и я определю твой цветотип и подберу идеальную палитру!",
-              });
+              const content = "🎨 Для анализа цветотипа нужно твоё фото при дневном освещении. Загрузи фото лица, и я определю твой цветотип и подберу идеальную палитру!";
+              addMessage({ role: "assistant", content });
+              await saveMessageToDB("assistant", content);
             } else {
               const colortypeResponse = await fetch(COLORTYPE_URL, {
                 method: "POST",
@@ -268,36 +377,45 @@ export function useChat() {
                 throw new Error("Ошибка анализа");
               }
               const colorData: ColorPaletteData = await colortypeResponse.json();
+              const buttons = getContextualActions({ hasPhoto: true, lastAction: "colortype", isStyleMode: true });
 
+              const content = `🎨 Твой цветотип — **${colorData.type} (${colorData.season})**! ${colorData.description}`;
               addMessage({
                 role: "assistant",
-                content: `🎨 Твой цветотип — **${colorData.type} (${colorData.season})**! ${colorData.description}`,
+                content,
                 colorPalette: colorData,
-                buttons: getContextualActions({ hasPhoto: true, lastAction: "colortype", isStyleMode: true }),
+                buttons,
               });
+              await saveMessageToDB("assistant", content, { colorPalette: colorData, buttons });
             }
             break;
 
           case "trends_2026":
           case "more_trends":
             const trends = getNextTrends(3);
+            const trendButtons = [
+              { id: "more", icon: "➕", label: "Ещё тренды", action: "more_trends" as const, variant: "secondary" as const },
+            ];
+            const trendContent = "✨ Вот главные тренды 2026 года! Листай карточки и выбирай, что тебе ближе 👇";
             addMessage({
               role: "assistant",
-              content: "✨ Вот главные тренды 2026 года! Листай карточки и выбирай, что тебе ближе 👇",
+              content: trendContent,
               trendGallery: trends,
-              buttons: [
-                { id: "more", icon: "➕", label: "Ещё тренды", action: "more_trends", variant: "secondary" },
-              ],
+              buttons: trendButtons,
             });
+            await saveMessageToDB("assistant", trendContent, { trendGallery: trends, buttons: trendButtons });
             break;
 
           case "style":
             setIsStyleMode(true);
+            const styleButtons = getContextualActions({ hasPhoto: !!uploadedPhoto, lastAction: "style", isStyleMode: true });
+            const styleContent = "👔 Отлично! Расскажи, какой стиль тебе ближе — casual, классика, спорт-шик? Или загрузи фото образа, который тебе нравится, и я подберу что-то похожее!";
             addMessage({
               role: "assistant",
-              content: "👔 Отлично! Расскажи, какой стиль тебе ближе — casual, классика, спорт-шик? Или загрузи фото образа, который тебе нравится, и я подберу что-то похожее!",
-              buttons: getContextualActions({ hasPhoto: !!uploadedPhoto, lastAction: "style", isStyleMode: true }),
+              content: styleContent,
+              buttons: styleButtons,
             });
+            await saveMessageToDB("assistant", styleContent, { buttons: styleButtons });
             break;
 
           case "upload_photo":
@@ -306,17 +424,15 @@ export function useChat() {
             break;
 
           case "try_another":
-            addMessage({
-              role: "assistant",
-              content: "🔄 Какой стиль попробуем? Casual, романтика, офисный look, или что-то дерзкое?",
-            });
+            const tryAnotherContent = "🔄 Какой стиль попробуем? Casual, романтика, офисный look, или что-то дерзкое?";
+            addMessage({ role: "assistant", content: tryAnotherContent });
+            await saveMessageToDB("assistant", tryAnotherContent);
             break;
 
           case "where_to_buy":
-            addMessage({
-              role: "assistant",
-              content: "🛒 Скоро здесь появятся ссылки на магазины-партнёры! А пока могу подсказать, на что обратить внимание при выборе 💫",
-            });
+            const buyContent = "🛒 Скоро здесь появятся ссылки на магазины-партнёры! А пока могу подсказать, на что обратить внимание при выборе 💫";
+            addMessage({ role: "assistant", content: buyContent });
+            await saveMessageToDB("assistant", buyContent);
             break;
         }
       } catch (error) {
@@ -329,7 +445,7 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [uploadedPhoto, addMessage]
+    [uploadedPhoto, addMessage, saveMessageToDB]
   );
 
   const handleImageUpload = useCallback((file: File, url: string) => {
@@ -346,12 +462,12 @@ export function useChat() {
 
   const clearHistory = useCallback(() => {
     setMessages([]);
-    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   return {
     messages,
     isLoading,
+    isLoadingHistory,
     isStyleMode,
     uploadedPhoto,
     sendMessage,
