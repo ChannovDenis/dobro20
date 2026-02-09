@@ -55,17 +55,9 @@ export default function Chat() {
 
   const hasMessages = messages.length > 0;
 
-  const handleClose = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Clear URL params when closing
+  const handleClose = () => {
     setSearchParams({});
-    // Navigate back if possible, otherwise to feed
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/feed');
-    }
+    navigate('/feed');
   };
 
   const clearContext = () => {
