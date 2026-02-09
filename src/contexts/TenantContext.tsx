@@ -101,15 +101,18 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('slug', slug)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
-      if (fetchError) {
+      if (fetchError || !data) {
         // Fallback to default tenant
         if (slug !== DEFAULT_TENANT_SLUG) {
           console.warn(`Tenant "${slug}" not found, falling back to default`);
           return fetchTenant(DEFAULT_TENANT_SLUG);
         }
-        throw fetchError;
+        if (fetchError) throw fetchError;
+        // No data for default tenant - use fallback values
+        setTenant(null);
+        return;
       }
 
       const themeData = (data.theme as unknown as TenantTheme) || DEFAULT_THEME;
