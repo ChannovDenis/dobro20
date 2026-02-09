@@ -92,12 +92,13 @@ export default function Chat() {
     }
   }, [currentService, setServiceType]);
 
-  // Sync topic ID to chat hook
+  // Sync topic ID to chat hook - use URL param directly for immediate loading
   useEffect(() => {
-    if (currentTopic?.id && setTopicId) {
-      setTopicId(currentTopic.id);
+    const targetTopicId = currentTopic?.id || topicIdParam;
+    if (targetTopicId && setTopicId) {
+      setTopicId(targetTopicId);
     }
-  }, [currentTopic?.id, setTopicId]);
+  }, [currentTopic?.id, topicIdParam, setTopicId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
