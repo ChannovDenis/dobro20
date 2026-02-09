@@ -1,5 +1,6 @@
 export interface Message {
   id: string;
+  dbId?: string;
   role: "user" | "assistant";
   content: string;
   imageUrl?: string;
