@@ -1,4 +1,4 @@
-import { Home, MessageCircle, Grid3X3, Clock } from "lucide-react";
+import { Home, MessageCircle, Grid3X3 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,6 @@ interface BottomNavProps {
 const navItems = [
   { icon: Home, label: "Лента", path: "/feed" },
   { icon: MessageCircle, label: "Чат", path: "/chat", special: true },
-  { icon: Clock, label: "История", path: "/history" },
   { icon: Grid3X3, label: "Сервисы", path: "/services" },
 ];
 
