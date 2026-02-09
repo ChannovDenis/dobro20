@@ -154,11 +154,7 @@ export default function History() {
   }, [allBookings, aiConsultations, filter]);
 
   const handleClose = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate("/feed");
-    }
+    navigate("/services");
   };
 
   const handleCancelBooking = (bookingId: string) => {
