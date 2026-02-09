@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -48,6 +48,14 @@ export default function Chat() {
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   
+  // Handler for auto-created topic
+  const handleTopicAutoCreated = useCallback((newTopicId: string, newServiceType: string) => {
+    // Update URL with new topic
+    setSearchParams({ topicId: newTopicId, service: newServiceType });
+    // Refresh topics list
+    fetchTopics();
+  }, [setSearchParams, fetchTopics]);
+
   // Get the appropriate AI assistant based on service
   const currentService = currentTopic?.service_type || serviceParam;
   const assistant = getAssistant(currentService);
@@ -64,7 +72,7 @@ export default function Chat() {
     clearUploadedPhoto,
     setServiceType,
     setTopicId,
-  } = useChat();
+  } = useChat(handleTopicAutoCreated);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load topic from URL param on mount

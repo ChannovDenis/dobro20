@@ -1,9 +1,12 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Message, ChatAction, ColorPaletteData, EscalationData } from "@/types/chat";
 import { detectStyleMode, getContextualActions } from "@/constants/chatActions";
 import { getNextTrends } from "@/constants/trends";
 import { getSessionId } from "@/lib/session";
 import { getSupabaseWithSession } from "@/lib/supabaseWithSession";
+
+// Callback type for topic auto-creation
+export type TopicAutoCreatedCallback = (topicId: string, serviceType: string) => void;
 
 const LISA_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lisa-stylist`;
 const COLORTYPE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/colortype-analyzer`;
@@ -47,7 +50,7 @@ function dbMessageToLocal(dbMsg: DBMessage): Message {
   };
 }
 
-export function useChat() {
+export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStyleMode, setIsStyleMode] = useState(false);
@@ -56,6 +59,7 @@ export function useChat() {
   const [serviceType, setServiceType] = useState<string | null>(null);
   const [topicId, setTopicId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const isCreatingTopic = useRef(false);
 
   // Load messages from DB when topicId changes
   useEffect(() => {
@@ -98,9 +102,11 @@ export function useChat() {
     async (
       role: "user" | "assistant",
       content: string,
-      metadata?: Record<string, unknown>
+      metadata?: Record<string, unknown>,
+      overrideTopicId?: string
     ): Promise<string | null> => {
-      if (!topicId) {
+      const targetTopicId = overrideTopicId ?? topicId;
+      if (!targetTopicId) {
         console.warn("No topic selected, cannot save message");
         return null;
       }
@@ -110,7 +116,7 @@ export function useChat() {
         const { data, error } = await supabase
           .from("topic_messages")
           .insert([{
-            topic_id: topicId,
+            topic_id: targetTopicId,
             role,
             content,
             metadata: metadata as unknown as null,
@@ -130,6 +136,58 @@ export function useChat() {
       }
     },
     [topicId]
+  );
+
+  // Ensure topic exists before saving messages (auto-create if needed)
+  const ensureTopicExists = useCallback(
+    async (firstMessage: string): Promise<string | null> => {
+      // Already have a topic
+      if (topicId) return topicId;
+      
+      // Prevent double creation
+      if (isCreatingTopic.current) return null;
+      isCreatingTopic.current = true;
+
+      try {
+        const supabase = getSupabaseWithSession();
+        const { data: authData } = await supabase.auth.getUser();
+        const user = authData?.user;
+        const sessionId = getSessionId();
+        
+        // Create title from first message (truncated)
+        const title = firstMessage.slice(0, 50) + (firstMessage.length > 50 ? '...' : '');
+        const currentService = serviceType || 'general';
+        
+        const { data, error } = await supabase
+          .from('topics')
+          .insert({
+            title,
+            service_type: currentService,
+            session_id: user ? null : sessionId,
+            user_id: user?.id ?? null,
+          })
+          .select('id')
+          .single();
+
+        if (error) {
+          console.error('Failed to create topic:', error);
+          return null;
+        }
+
+        const newTopicId = data.id;
+        setTopicId(newTopicId);
+        
+        // Notify parent component about auto-created topic
+        if (onTopicAutoCreated) {
+          onTopicAutoCreated(newTopicId, currentService);
+        }
+
+        return newTopicId;
+      } finally {
+        isCreatingTopic.current = false;
+      }
+    },
+    [topicId, serviceType, onTopicAutoCreated]
   );
 
   const addMessage = useCallback((message: Omit<Message, "id">) => {
@@ -223,8 +281,10 @@ export function useChat() {
 
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!topicId) {
-        console.warn("No topic selected");
+      // Ensure topic exists (auto-create if needed)
+      const currentTopicId = await ensureTopicExists(content);
+      if (!currentTopicId) {
+        console.warn("Failed to ensure topic exists");
         return;
       }
 
@@ -248,7 +308,7 @@ export function useChat() {
       if (uploadedPhoto?.url) {
         userMetadata.imageUrl = uploadedPhoto.url;
       }
-      await saveMessageToDB("user", content, Object.keys(userMetadata).length > 0 ? userMetadata : undefined);
+      await saveMessageToDB("user", content, Object.keys(userMetadata).length > 0 ? userMetadata : undefined, currentTopicId);
 
       // Build conversation history
       const history = [...messages, userMessage].map((m) => ({
@@ -295,7 +355,8 @@ export function useChat() {
         await saveMessageToDB(
           "assistant",
           assistantContent,
-          Object.keys(assistantMetadata).length > 0 ? assistantMetadata : undefined
+          Object.keys(assistantMetadata).length > 0 ? assistantMetadata : undefined,
+          currentTopicId
         );
 
         // Clear uploaded photo after sending
@@ -312,7 +373,7 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [messages, isStyleMode, uploadedPhoto, lastAction, serviceType, topicId, addMessage, updateMessage, saveMessageToDB]
+    [messages, isStyleMode, uploadedPhoto, lastAction, serviceType, ensureTopicExists, addMessage, updateMessage, saveMessageToDB]
   );
 
   const handleAction = useCallback(
