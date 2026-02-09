@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { 
   Crown, Bell, Shield, Info, LogOut,
   Moon, Globe, Trash2, ExternalLink,
-  Instagram, Send, Palette, BarChart3
+  Instagram, Send, Palette, BarChart3, User
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -12,14 +12,27 @@ import { SettingsSection, SettingsItem } from "@/components/settings/SettingsSec
 import { ThemeSwitcher } from "@/components/settings/ThemeSwitcher";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [notifications, setNotifications] = useState({
     push: true,
     email: false,
     promotions: true,
   });
+
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast.error('Ошибка при выходе');
+    } else {
+      toast.success('Вы вышли из аккаунта');
+      navigate('/auth', { replace: true });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -129,16 +142,30 @@ export default function Settings() {
           </button>
         </motion.div>
 
-        {/* Logout */}
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full glass-card p-4 flex items-center justify-center gap-2 text-destructive"
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="font-medium">Выйти из аккаунта</span>
-        </motion.button>
+        {/* Auth Section */}
+        {user ? (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleLogout}
+            className="w-full glass-card p-4 flex items-center justify-center gap-2 text-destructive"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="font-medium">Выйти из аккаунта</span>
+          </motion.button>
+        ) : (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/auth')}
+            className="w-full glass-card p-4 flex items-center justify-center gap-2 text-primary"
+          >
+            <User className="w-5 h-5" />
+            <span className="font-medium">Войти в аккаунт</span>
+          </motion.button>
+        )}
       </div>
 
       <BottomNav />
