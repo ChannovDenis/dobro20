@@ -55,15 +55,8 @@ const categories = [
 export default function Services() {
   const navigate = useNavigate();
 
-  const handleClose = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Navigate back if possible, otherwise to feed
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/feed');
-    }
+  const handleClose = () => {
+    navigate('/feed');
   };
 
   const handleQuickAction = (id: string) => {
