@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTenant } from './useTenant';
+import { getSessionId } from '@/lib/session';
+import { getSupabaseWithSession } from '@/lib/supabaseWithSession';
 
 export type TopicStatus = 'active' | 'archived' | 'escalated';
 export type MessageRole = 'user' | 'assistant' | 'system' | 'expert';
@@ -38,6 +39,9 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
   const [messages, setMessages] = useState<TopicMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get supabase client with session headers
+  const supabase = useMemo(() => getSupabaseWithSession(), []);
 
   // Fetch all topics for current user
   const fetchTopics = useCallback(async () => {
@@ -94,7 +98,9 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      const sessionId = getSessionId();
 
+      // For anonymous users, we need session_id
       const insertData: {
         user_id: string | null;
         tenant_id: string | null;
@@ -102,6 +108,7 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
         service_type: string | null;
         context: Record<string, unknown> | null;
         status: 'active' | 'archived' | 'escalated';
+        session_id: string | null;
       } = {
         user_id: user?.id ?? null,
         tenant_id: tenantId ?? null,
@@ -109,8 +116,10 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
         service_type: serviceType ?? null,
         context: context ?? null,
         status: 'active',
+        session_id: user ? null : sessionId, // Only set session_id for anonymous users
       };
 
+      // Add session_id header for RLS policy
       const { data, error: insertError } = await supabase
         .from('topics')
         .insert(insertData as never)
