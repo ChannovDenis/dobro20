@@ -5,7 +5,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { SuggestionTicker } from "@/components/chat/SuggestionTicker";
+import { TopicContextBar } from "@/components/chat/TopicContextBar";
+import { ExpertButton } from "@/components/chat/ExpertButton";
 import { useChat } from "@/hooks/useChat";
+import { useTopics, Topic } from "@/hooks/useTopics";
 import { ChatAction } from "@/types/chat";
 import { useTenant } from "@/hooks/useTenant";
 import { getAssistant } from "@/constants/aiAssistants";
@@ -19,10 +22,22 @@ export default function Chat() {
   const contextParam = searchParams.get("context");
   const promptParam = searchParams.get("prompt");
   const serviceParam = searchParams.get("service");
+  const topicIdParam = searchParams.get("topicId");
   const [context, setContext] = useState<string | null>(contextParam);
   
+  // Topics hook for DB integration
+  const { 
+    currentTopic, 
+    messages: topicMessages, 
+    setCurrentTopic,
+    selectTopic,
+    fetchTopics,
+    topics,
+  } = useTopics({ autoLoad: true });
+  
   // Get the appropriate AI assistant based on service
-  const assistant = getAssistant(serviceParam);
+  const currentService = currentTopic?.service_type || serviceParam;
+  const assistant = getAssistant(currentService);
   const AssistantIcon = assistant.icon;
   
   const {
@@ -34,8 +49,34 @@ export default function Chat() {
     handleAction,
     handleImageUpload,
     clearUploadedPhoto,
+    setServiceType,
+    setTopicId,
   } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load topic from URL param on mount
+  useEffect(() => {
+    if (topicIdParam && topics.length > 0) {
+      const topic = topics.find(t => t.id === topicIdParam);
+      if (topic) {
+        selectTopic(topic);
+      }
+    }
+  }, [topicIdParam, topics, selectTopic]);
+
+  // Sync service type to chat hook
+  useEffect(() => {
+    if (currentService && setServiceType) {
+      setServiceType(currentService);
+    }
+  }, [currentService, setServiceType]);
+
+  // Sync topic ID to chat hook
+  useEffect(() => {
+    if (currentTopic?.id && setTopicId) {
+      setTopicId(currentTopic.id);
+    }
+  }, [currentTopic?.id, setTopicId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -53,6 +94,13 @@ export default function Chat() {
     sendMessage(text);
   };
 
+  const handleTopicCreated = (topicId: string, serviceType: string) => {
+    // Update URL with new topic
+    setSearchParams({ topicId, service: serviceType });
+    // Refresh topics list
+    fetchTopics();
+  };
+
   const hasMessages = messages.length > 0;
 
   const handleClose = () => {
@@ -68,11 +116,11 @@ export default function Chat() {
   // Get AI name: service-specific > style mode > tenant config > default
   const aiName = isStyleMode 
     ? "Стилист Лиза" 
-    : (serviceParam ? assistant.name : (tenant?.ai_name || "Добро-ассистент"));
+    : (currentService ? assistant.name : (tenant?.ai_name || "Добро-ассистент"));
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      {/* Modal Header with close button */}
+      {/* Modal Header with close button and expert button */}
       <motion.header
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -94,8 +142,17 @@ export default function Chat() {
             {aiName}
           </h1>
         </div>
-        <div className="w-9" /> {/* Spacer for centering */}
+        {/* Expert button */}
+        <ExpertButton serviceId={currentService} />
       </motion.header>
+
+      {/* Topic context bar */}
+      {currentTopic && (
+        <TopicContextBar 
+          topic={currentTopic} 
+          messageCount={messages.length}
+        />
+      )}
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 flex flex-col">
@@ -132,14 +189,14 @@ export default function Chat() {
                 <AssistantIcon className="w-6 h-6 text-white" />
               </div>
               <p className="text-muted-foreground text-sm">
-                Чем могу помочь?
+                {currentTopic ? `Тема: ${currentTopic.title}` : "Чем могу помочь?"}
               </p>
             </motion.div>
 
             {/* Suggestion ticker - service-specific or default */}
             <SuggestionTicker 
               onSuggestionClick={handleSuggestionClick} 
-              serviceId={serviceParam || undefined}
+              serviceId={currentService || undefined}
             />
           </div>
         ) : (
@@ -189,6 +246,7 @@ export default function Chat() {
         uploadedPhotoUrl={uploadedPhoto?.url}
         onClearPhoto={clearUploadedPhoto}
         initialPrompt={promptParam || undefined}
+        onTopicCreated={handleTopicCreated}
       />
     </div>
   );

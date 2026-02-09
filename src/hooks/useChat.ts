@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Message, ChatAction, ColorPaletteData, TrendItem } from "@/types/chat";
+import { Message, ChatAction, ColorPaletteData, TrendItem, EscalationData } from "@/types/chat";
 import { detectStyleMode, getContextualActions } from "@/constants/chatActions";
 import { getNextTrends } from "@/constants/trends";
 import { getSessionId } from "@/lib/session";
@@ -9,6 +9,7 @@ const COLORTYPE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/colorty
 const TRYON_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/virtual-tryon`;
 
 const STORAGE_KEY = 'dobro-chat-history';
+const ESCALATION_THRESHOLD = 5; // Show escalation after N messages
 
 // Helper to get auth headers with session ID
 function getAuthHeaders(): Record<string, string> {
@@ -32,11 +33,21 @@ export function useChat() {
   const [isStyleMode, setIsStyleMode] = useState(false);
   const [uploadedPhoto, setUploadedPhoto] = useState<{ file: File; url: string } | null>(null);
   const [lastAction, setLastAction] = useState<string | undefined>();
+  const [serviceType, setServiceType] = useState<string | null>(null);
+  const [topicId, setTopicId] = useState<string | null>(null);
 
   // Persist messages to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
   }, [messages]);
+
+  // Clear messages when topic changes
+  useEffect(() => {
+    if (topicId) {
+      // New topic - clear local messages
+      setMessages([]);
+    }
+  }, [topicId]);
 
   const addMessage = useCallback((message: Omit<Message, "id">) => {
     const newMessage: Message = {
@@ -156,15 +167,30 @@ export function useChat() {
           history
         );
 
-        // Add contextual action buttons
+        // Add contextual action buttons and escalation
         if (messageId) {
           const buttons = getContextualActions({
             hasPhoto: !!uploadedPhoto,
             lastAction,
             isStyleMode,
           });
-          if (buttons.length > 0) {
-            updateMessage(messageId, { buttons });
+          
+          // Check if we should show escalation (after threshold messages)
+          const totalMessages = messages.length + 2; // +2 for user + assistant
+          let escalation: EscalationData | undefined;
+          
+          if (serviceType && totalMessages >= ESCALATION_THRESHOLD) {
+            escalation = {
+              serviceId: serviceType,
+            };
+          }
+          
+          const updates: Partial<Message> = {};
+          if (buttons.length > 0) updates.buttons = buttons;
+          if (escalation) updates.escalation = escalation;
+          
+          if (Object.keys(updates).length > 0) {
+            updateMessage(messageId, updates);
           }
         }
 
@@ -182,7 +208,7 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [messages, isStyleMode, uploadedPhoto, lastAction, addMessage, updateMessage]
+    [messages, isStyleMode, uploadedPhoto, lastAction, serviceType, addMessage, updateMessage]
   );
 
   const handleAction = useCallback(
@@ -333,5 +359,9 @@ export function useChat() {
     handleImageUpload,
     clearUploadedPhoto,
     clearHistory,
+    setServiceType,
+    setTopicId,
+    serviceType,
+    topicId,
   };
 }

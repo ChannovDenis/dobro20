@@ -10,6 +10,7 @@ export interface Message {
   colorPalette?: ColorPaletteData;
   trendGallery?: TrendItem[];
   clothingOptions?: ClothingItem[];
+  escalation?: EscalationData;
 }
 
 export interface ActionButton {
@@ -30,7 +31,25 @@ export type ChatAction =
   | "trends_2026"
   | "more_trends"
   | "try_another"
-  | "where_to_buy";
+  | "where_to_buy"
+  | "escalate"
+  | "new_topic";
+
+export interface ServiceTemplate {
+  id: string;
+  icon: string;
+  label: string;
+  description: string;
+  serviceType: string;
+}
+
+export interface EscalationData {
+  serviceId: string;
+  expertName?: string;
+  price?: string;
+  nextSlot?: string;
+  available?: boolean;
+}
 
 export interface TrendItem {
   id: string;
