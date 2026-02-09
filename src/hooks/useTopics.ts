@@ -237,6 +237,28 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
     }
   }, [currentTopic]);
 
+  // Clear all messages in a topic (without deleting the topic)
+  const clearMessages = useCallback(async (topicId: string) => {
+    try {
+      const { error: deleteError } = await supabase
+        .from('topic_messages')
+        .delete()
+        .eq('topic_id', topicId);
+
+      if (deleteError) throw deleteError;
+
+      if (currentTopic?.id === topicId) {
+        setMessages([]);
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Failed to clear messages:', err);
+      setError('Не удалось очистить сообщения');
+      return false;
+    }
+  }, [currentTopic]);
+
   // Delete a topic
   const deleteTopic = useCallback(async (topicId: string) => {
     try {
@@ -253,9 +275,12 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
         setCurrentTopic(null);
         setMessages([]);
       }
+
+      return true;
     } catch (err) {
       console.error('Failed to delete topic:', err);
       setError('Не удалось удалить чат');
+      return false;
     }
   }, [currentTopic]);
 
@@ -293,6 +318,7 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
     addMessage,
     updateTopicTitle,
     updateTopicStatus,
+    clearMessages,
     deleteTopic,
     selectTopic,
     autoGenerateTitle,
