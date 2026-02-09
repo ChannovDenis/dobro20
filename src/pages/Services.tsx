@@ -4,7 +4,7 @@ import {
   Scale, Heart, Brain, Wallet, Dumbbell, Shield, 
   Dog, Sparkles, FileText, Calculator, Bot, Settings,
   ChevronRight, Crown, Bell, Gift, TrendingUp, Zap,
-  CreditCard, QrCode, Percent, Star, ArrowRight, X, Sprout
+  CreditCard, QrCode, Percent, Star, ArrowRight, X, Sprout, Clock
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -239,6 +239,27 @@ export default function Services() {
           <div className="flex-1">
             <h3 className="font-bold text-foreground">AI-ассистент</h3>
             <p className="text-sm text-muted-foreground">Ответит на любой вопрос за секунды</p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-muted-foreground" />
+        </motion.div>
+      </section>
+
+      {/* History card */}
+      <section className="px-4 py-2">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => navigate("/history")}
+          className="glass-card p-4 flex items-center gap-4 cursor-pointer"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-category-primary flex items-center justify-center">
+            <Clock className="w-7 h-7 text-category-primary" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-foreground">История консультаций</h3>
+            <p className="text-sm text-muted-foreground">Записи к экспертам и AI-чаты</p>
           </div>
           <ArrowRight className="w-5 h-5 text-muted-foreground" />
         </motion.div>
