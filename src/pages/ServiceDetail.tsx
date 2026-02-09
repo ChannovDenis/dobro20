@@ -231,7 +231,7 @@ export default function ServiceDetail() {
             </p>
             <Button 
               className="mt-4"
-              onClick={() => navigate("/chat")}
+              onClick={() => navigate(`/chat?service=${id}`)}
             >
               Открыть AI-чат
             </Button>

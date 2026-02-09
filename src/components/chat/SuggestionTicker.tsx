@@ -1,43 +1,10 @@
 import { motion } from "framer-motion";
-
-interface Suggestion {
-  icon: string;
-  label: string;
-  prompt: string;
-}
+import { getAssistant, getDefaultSuggestions, Suggestion } from "@/constants/aiAssistants";
 
 interface SuggestionTickerProps {
   onSuggestionClick: (prompt: string) => void;
+  serviceId?: string;
 }
-
-const SUGGESTIONS: Suggestion[] = [
-  // Row 1
-  { icon: "🌱", label: "Что сажать?", prompt: "Что сейчас сажать в моём регионе?" },
-  { icon: "⚖️", label: "Возврат товара", prompt: "Помоги с возвратом товара" },
-  { icon: "🩺", label: "Симптомы", prompt: "Какие симптомы у простуды?" },
-  { icon: "💰", label: "Бюджет", prompt: "Как начать копить деньги?" },
-  { icon: "👗", label: "Мой стиль", prompt: "Подбери мне образ" },
-  { icon: "🍳", label: "Рецепты", prompt: "Что приготовить на ужин?" },
-  // Row 2
-  { icon: "🧠", label: "Стресс", prompt: "Как справиться со стрессом?" },
-  { icon: "🐕", label: "Питомец", prompt: "Чем кормить щенка?" },
-  { icon: "🏋️", label: "Фитнес", prompt: "Упражнения для дома" },
-  { icon: "📄", label: "Документы", prompt: "Проверь мой договор" },
-  { icon: "💊", label: "Лекарства", prompt: "Аналоги лекарств" },
-  { icon: "🎁", label: "Подарок", prompt: "Что подарить маме?" },
-  // Row 3
-  { icon: "🔒", label: "Мошенники", prompt: "Как распознать мошенников?" },
-  { icon: "💼", label: "Работа", prompt: "Права работника" },
-  { icon: "🏠", label: "ЖКХ", prompt: "Как снизить счета ЖКХ?" },
-  { icon: "✈️", label: "Отпуск", prompt: "Куда поехать зимой?" },
-  { icon: "🎓", label: "Обучение", prompt: "Как выучить новое?" },
-  { icon: "🚗", label: "Авто", prompt: "Как выбрать машину?" },
-];
-
-// Split into 3 rows
-const row1 = SUGGESTIONS.slice(0, 6);
-const row2 = SUGGESTIONS.slice(6, 12);
-const row3 = SUGGESTIONS.slice(12, 18);
 
 function SuggestionChip({ 
   suggestion, 
@@ -87,7 +54,20 @@ function TickerRow({
   );
 }
 
-export function SuggestionTicker({ onSuggestionClick }: SuggestionTickerProps) {
+export function SuggestionTicker({ onSuggestionClick, serviceId }: SuggestionTickerProps) {
+  // Get suggestions based on service or use defaults
+  const suggestions = serviceId 
+    ? getAssistant(serviceId).suggestions 
+    : getDefaultSuggestions();
+  
+  // Split into rows (2 for service-specific, 3 for default)
+  const rowCount = serviceId ? 2 : 3;
+  const itemsPerRow = Math.ceil(suggestions.length / rowCount);
+  
+  const row1 = suggestions.slice(0, itemsPerRow);
+  const row2 = suggestions.slice(itemsPerRow, itemsPerRow * 2);
+  const row3 = serviceId ? [] : suggestions.slice(itemsPerRow * 2, itemsPerRow * 3);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -97,7 +77,9 @@ export function SuggestionTicker({ onSuggestionClick }: SuggestionTickerProps) {
     >
       <TickerRow items={row1} onSuggestionClick={onSuggestionClick} />
       <TickerRow items={row2} reverse onSuggestionClick={onSuggestionClick} />
-      <TickerRow items={row3} onSuggestionClick={onSuggestionClick} />
+      {row3.length > 0 && (
+        <TickerRow items={row3} onSuggestionClick={onSuggestionClick} />
+      )}
     </motion.div>
   );
 }
