@@ -1,79 +1,83 @@
 
-
-# Мульти-тенантность для 5 клиентов-партнёров
+# Стабильные тенант-зависимые данные для админ-панели
 
 ## Обзор
 
-Создание клиентского конфига тенантов и интеграция во все ключевые экраны: SplashScreen, Services, NewConsultationSheet. TenantContext переключается на локальный конфиг вместо запросов к БД (которая пуста для этих тенантов).
+Все 4 компонента админки (MetricsGrid, ActivityChart, TopServicesTable, RecentEscalations) сейчас используют захардкоженные данные без привязки к тенанту. Задача: создать файл с фиксированными данными для каждого из 6 тенантов и подключить их через `useTenant()`.
 
 ## Изменения
 
-### 1. Новый файл `src/config/tenants.ts`
+### 1. Создать `src/data/tenantMetrics.ts`
 
-Конфиг 6 тенантов (default + 5 партнёров) с интерфейсом `TenantConfig`:
-- `id`, `slug`, `name`, `appTitle`, `appSubtitle`
-- `accentColor` (HSL для --primary)
-- `enabledServices` (массив slug-ов сервисов)
+Большой файл с тремя экспортами:
 
-Все данные — из задания (Добросервис, Газпромбанк, Wildberries, Почта России, Мосэнергосервис, Альфа-Банк).
+- **`dashboardMetrics`** — Record по tenant.id с 4 метриками (aiRequests, escalations, nps, avgTime) и их процентными изменениями
+- **`activityChartData`** — Record по tenant.id, массив из 30 дней (17.01-15.02) с полями date/aiRequests/escalations. Реалистичный паттерн: будни выше, выходные ниже, тренд вверх. Масштаб пропорционален тенанту (WB ~5x, GPB ~3x от Добро)
+- **`burndownData`** — Record по tenant.id, 30 дней с plan (линейное убывание) и fact (с колебаниями). Разные лимиты для каждого тенанта
 
-### 2. Переработка `src/contexts/TenantContext.tsx`
+### 2. Создать `src/data/tenantEscalations.ts`
 
-Текущая логика: запрос к таблице `public_tenant_info` → fallback на дефолт.
+Record по tenant.id с массивом эскалаций (user, avatar, service, reason, time, priority, status):
+- dobroservice: 3 записи (текущие — наследство, очная консультация, кризис)
+- gazprombank: 3 записи (кредитный договор, возврат страховки, реструктуризация)
+- wildberries: 2 записи (бракованный товар, блокировка кабинета)
+- pochtarf: 2 записи (потеря посылки, задержка EMS)
+- mes: 2 записи (перерасчёт отопления, отключение воды)
+- alfa: 3 записи (инвестиционный спор, блокировка карты, ипотека)
 
-Новая логика:
-- Импортировать `tenants` из `config/tenants.ts`
-- При резолве slug (из `?tenant=` или поддомена) — искать в `tenants[slug]`
-- Если не найден — `tenants.default`
-- Заполнять `Tenant` объект из локального конфига: `appTitle`, `appSubtitle`, `enabled_services` из `enabledServices`, theme из `accentColor`
-- Применять `accentColor` как `--primary` CSS-переменную (механизм `applyThemeToDocument` уже есть)
-- Добавить поля `appTitle` и `appSubtitle` в интерфейс `Tenant`
-- `isServiceEnabled()` — реальная проверка по `enabled_services`
-- Попытка загрузки из БД остаётся как дополнительный слой (если в БД есть данные — они перезапишут локальные), но основной fallback — локальный конфиг
+### 3. Создать `src/data/tenantServices.ts`
 
-### 3. `src/pages/SplashScreen.tsx`
+Record по tenant.id с массивом сервисов (id, name, requests, limit, icon-id). Для каждого тенанта только его сервисы из enabledServices:
+- GPB: Юрист 1840/2000, Финансист 920/1000, Психолог 450/500, Врач 380/500, Безопасность 210/300, Ассистент 620/1000
+- WB: Юрист 2100/2500, Стилист 1800/2000, Психолог 650/800, Ассистент 1200/1500
+- И так далее для каждого тенанта
 
-- Импорт `useTenantContext`
-- Заменить захардкоженный "ДОБРОСЕРВИС" на `tenant?.appTitle`
-- Заменить подзаголовок на `tenant?.appSubtitle`
-- Иконка Bot остаётся
+### 4. Изменить `src/components/admin/MetricsGrid.tsx`
 
-### 4. `src/pages/Services.tsx`
+- Импортировать `dashboardMetrics` и `useTenant`
+- Получить `tenantId` из хука
+- Маппить 4 карточки из `dashboardMetrics[tenantId]` вместо хардкода METRICS
+- Форматирование: aiRequests с toLocaleString(), avgTime с "мин", nps с "%"
 
-- Получить `enabledServices` (или `isServiceEnabled`) из `useTenantContext`
-- Фильтровать массив `services` из mockData: показывать только те, чей `id` есть в `tenant.enabled_services`
-- Сохранять порядок из `enabledServices`
-- Скрывать пустые категории (если после фильтрации в категории 0 сервисов — не рендерить секцию)
+### 5. Изменить `src/components/admin/ActivityChart.tsx`
 
-### 5. `src/components/chat/NewConsultationSheet.tsx`
+- Импортировать `activityChartData` и `useTenant`
+- Использовать `activityChartData[tenantId]` вместо DATA
+- Поменять dataKey на "aiRequests" и "escalations"
+- Заголовок секции в Admin.tsx: "Активность за месяц" (30 дней вместо недели)
 
-- Получить `tenant` из `useTenantContext`
-- Фильтровать ассистентов: показывать только тех, чей `id` есть в `tenant.enabled_services`
-- `assistant` (Добро-ассистент / `default`) — всегда первый в списке
+### 6. Изменить `src/components/admin/TopServicesTable.tsx`
+
+- Импортировать `tenantServiceUsage` и `useTenant`
+- Показывать сервисы из `tenantServiceUsage[tenantId]`
+- Добавить колонку "лимит" (requests/limit формат)
+- Прогресс-бар: ширина = requests/limit * 100%
+
+### 7. Изменить `src/components/admin/RecentEscalations.tsx`
+
+- Импортировать `tenantEscalations` и `useTenant`
+- Использовать `tenantEscalations[tenantId]` вместо ESCALATIONS
+- Добавить badge приоритета (high = красный, medium = оранжевый)
+
+### 8. Изменить `src/pages/Admin.tsx`
+
+- Заголовок графика: "Активность за месяц" вместо "за неделю"
 
 ## Файлы
 
 | Файл | Действие |
 |------|----------|
-| `src/config/tenants.ts` | Создать |
-| `src/contexts/TenantContext.tsx` | Изменить — добавить appTitle/appSubtitle, интегрировать локальный конфиг |
-| `src/pages/SplashScreen.tsx` | Изменить — динамический title/subtitle из контекста |
-| `src/pages/Services.tsx` | Изменить — фильтрация сервисов по enabledServices |
-| `src/components/chat/NewConsultationSheet.tsx` | Изменить — фильтрация ассистентов по enabledServices |
+| `src/data/tenantMetrics.ts` | Создать — метрики + график активности + burndown |
+| `src/data/tenantEscalations.ts` | Создать — эскалации по тенантам |
+| `src/data/tenantServices.ts` | Создать — использование сервисов по тенантам |
+| `src/components/admin/MetricsGrid.tsx` | Изменить — данные из tenantMetrics |
+| `src/components/admin/ActivityChart.tsx` | Изменить — данные из tenantMetrics |
+| `src/components/admin/TopServicesTable.tsx` | Изменить — данные из tenantServices |
+| `src/components/admin/RecentEscalations.tsx` | Изменить — данные из tenantEscalations |
+| `src/pages/Admin.tsx` | Изменить — заголовок "за месяц" |
 
 ## Что НЕ трогаем
 
-- AI-чат логику, Edge Functions
-- Авторизацию
-- Feed-контент
-- BottomNav (уже переделан)
-- Админку
-
-## Как тестировать
-
-Добавить `?tenant=gpb` или `?tenant=wb` к URL — приложение должно сменить:
-- Цвет (--primary)
-- Название на SplashScreen
-- Набор доступных сервисов
-- Набор ассистентов в Sheet "+"
-
+- Роутинг, авторизацию, UI-компоненты (shadcn), структуру страниц
+- Edge Functions, AI-логику
+- Темизацию, BottomNav
