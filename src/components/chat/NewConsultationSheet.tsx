@@ -1,19 +1,30 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { AI_ASSISTANTS } from "@/constants/aiAssistants";
+import { useTenantContext } from "@/contexts/TenantContext";
 
 interface NewConsultationSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-// Unique assistants (skip duplicates like wellness=fitness, style=stylist)
-const uniqueAssistants = Object.values(AI_ASSISTANTS).filter(
-  (a, i, arr) => a.id !== "default" && a.id !== "wellness" && a.id !== "style" && arr.findIndex(b => b.name === a.name) === i
-);
-
 export function NewConsultationSheet({ open, onOpenChange }: NewConsultationSheetProps) {
   const navigate = useNavigate();
+  const { tenant } = useTenantContext();
+
+  const filteredAssistants = useMemo(() => {
+    const enabledServices = tenant?.enabled_services || [];
+    const allAssistants = Object.values(AI_ASSISTANTS).filter(
+      (a, i, arr) => a.id !== "default" && a.id !== "wellness" && a.id !== "style" && arr.findIndex(b => b.name === a.name) === i
+    );
+    if (enabledServices.length === 0) return allAssistants;
+    // Filter by enabled services, keep 'assistant' always first
+    const filtered = allAssistants.filter(a => enabledServices.includes(a.id));
+    const assistantDefault = filtered.find(a => a.id === 'assistant');
+    const rest = filtered.filter(a => a.id !== 'assistant');
+    return assistantDefault ? [assistantDefault, ...rest] : rest;
+  }, [tenant]);
 
   const handleSelect = (slug: string) => {
     onOpenChange(false);
@@ -27,7 +38,7 @@ export function NewConsultationSheet({ open, onOpenChange }: NewConsultationShee
           <DrawerTitle>Выберите ассистента</DrawerTitle>
         </DrawerHeader>
         <div className="grid grid-cols-4 gap-4 px-4 pb-8">
-          {uniqueAssistants.map(assistant => {
+          {filteredAssistants.map(assistant => {
             const Icon = assistant.icon;
             return (
               <button
