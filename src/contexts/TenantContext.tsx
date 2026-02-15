@@ -50,6 +50,35 @@ function sanitizeHSLColor(color: string): string | null {
   return color.trim();
 }
 
+// Resolve tenant slug SYNCHRONOUSLY at module load time (before any React render).
+// This guarantees we capture ?tenant= from the URL before React Router strips it.
+function resolveTenantSlug(): string {
+  // 1. URL query parameter has highest priority
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramSlug = urlParams.get('tenant');
+  if (paramSlug) {
+    localStorage.setItem('dobro_tenant_slug', paramSlug);
+    return paramSlug;
+  }
+
+  // 2. Check localStorage (persisted from previous URL param)
+  const storedSlug = localStorage.getItem('dobro_tenant_slug');
+  if (storedSlug) return storedSlug;
+
+  // 3. Fallback: check hostname subdomain
+  const hostname = window.location.hostname;
+  const parts = hostname.split('.');
+  if (parts.length >= 3 && parts[0] !== 'www') {
+    localStorage.setItem('dobro_tenant_slug', parts[0]);
+    return parts[0];
+  }
+
+  return DEFAULT_TENANT_SLUG;
+}
+
+// Capture at module load — guaranteed before React Router runs
+const INITIAL_TENANT_SLUG = resolveTenantSlug();
+
 // Apply tenant theme as CSS variables
 function applyThemeToDocument(theme: TenantTheme, slug: string) {
   const root = document.documentElement;
@@ -101,20 +130,6 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const resolveTenantSlug = (): string => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paramSlug = urlParams.get('tenant');
-    if (paramSlug) return paramSlug;
-
-    const hostname = window.location.hostname;
-    const parts = hostname.split('.');
-    if (parts.length >= 3 && parts[0] !== 'www') {
-      return parts[0];
-    }
-
-    return DEFAULT_TENANT_SLUG;
-  };
-
   const fetchTenant = async (slug: string) => {
     setIsLoading(true);
     setError(null);
@@ -159,6 +174,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setTenantBySlug = async (slug: string) => {
+    localStorage.setItem('dobro_tenant_slug', slug);
     await fetchTenant(slug);
   };
 
@@ -168,8 +184,7 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const slug = resolveTenantSlug();
-    fetchTenant(slug);
+    fetchTenant(INITIAL_TENANT_SLUG);
   }, []);
 
   const value = useMemo(() => ({

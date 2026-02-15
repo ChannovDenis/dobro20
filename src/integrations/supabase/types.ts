@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          id: string
+          user_id: string | null
+          session_id: string | null
+          expert_id: string | null
+          expert_name: string | null
+          specialty: string | null
+          service_id: string | null
+          service_name: string | null
+          slot_date: string | null
+          slot_time: string | null
+          consultation_type: string | null
+          price: string | null
+          status: string | null
+          tenant_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          session_id?: string | null
+          expert_id?: string | null
+          expert_name?: string | null
+          specialty?: string | null
+          service_id?: string | null
+          service_name?: string | null
+          slot_date?: string | null
+          slot_time?: string | null
+          consultation_type?: string | null
+          price?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          session_id?: string | null
+          expert_id?: string | null
+          expert_name?: string | null
+          specialty?: string | null
+          service_id?: string | null
+          service_name?: string | null
+          slot_date?: string | null
+          slot_time?: string | null
+          consultation_type?: string | null
+          price?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string | null
