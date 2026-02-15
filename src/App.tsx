@@ -15,6 +15,9 @@ const Settings = lazy(() => import("./pages/Settings"));
 const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
 const ExpertDetail = lazy(() => import("./pages/ExpertDetail"));
 const MiniApp = lazy(() => import("./pages/MiniApp"));
+const GPBArchitect = lazy(() => import("./pages/GPBArchitect"));
+const MESProtection = lazy(() => import("./pages/MESProtection"));
+const MSBSkills = lazy(() => import("./pages/MSBSkills"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Chats = lazy(() => import("./pages/Chats"));
@@ -51,6 +54,9 @@ const App = () => (
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/service/:id" element={<ServiceDetail />} />
                   <Route path="/service/:id/expert/:expertId" element={<ExpertDetail />} />
+                  <Route path="/mini-app/gpb-architect" element={<GPBArchitect />} />
+                  <Route path="/mini-app/mes-protection" element={<MESProtection />} />
+                  <Route path="/mini-app/msb-skills" element={<MSBSkills />} />
                   <Route path="/mini-app/:id" element={<MiniApp />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/auth" element={<Auth />} />
