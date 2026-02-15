@@ -63,6 +63,13 @@ export default function Services() {
 
   const enabledServices = tenant?.enabled_services || [];
 
+  const daysSinceJoined = useMemo(() => {
+    if (!profile?.created_at) return 1;
+    const created = new Date(profile.created_at);
+    const now = new Date();
+    return Math.max(1, Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)));
+  }, [profile?.created_at]);
+
   // Filter services by tenant's enabledServices
   const filteredServices = useMemo(() => {
     if (enabledServices.length === 0) return services;
@@ -346,17 +353,13 @@ export default function Services() {
             <TrendingUp className="w-5 h-5 text-primary" />
             <h3 className="font-semibold text-foreground">Твоя активность</h3>
           </div>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold text-foreground">12</p>
-              <p className="text-xs text-muted-foreground">Консультаций</p>
+              <p className="text-2xl font-bold text-foreground">{profile?.ai_messages_used ?? 0}</p>
+              <p className="text-xs text-muted-foreground">AI-сообщений</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-primary">₽2,340</p>
-              <p className="text-xs text-muted-foreground">Сэкономлено</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">47</p>
+              <p className="text-2xl font-bold text-foreground">{daysSinceJoined}</p>
               <p className="text-xs text-muted-foreground">Дней с нами</p>
             </div>
           </div>

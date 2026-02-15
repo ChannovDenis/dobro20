@@ -173,6 +173,8 @@
     position: relative;
     overflow: hidden;
     background: hsl(var(--background));
+    /* Creates new containing block so position:fixed children stay inside */
+    transform: translateZ(0);
   }
 
   /* Outer background visible on desktop around the phone frame */
