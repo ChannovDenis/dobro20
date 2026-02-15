@@ -1,32 +1,18 @@
-import { Home, MessageCircle, Grid3X3 } from "lucide-react";
+import { Home, MessageCircle, LayoutGrid, Bot } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { ActiveFeedContext } from "@/pages/Feed";
-
-interface BottomNavProps {
-  activeFeedItem?: ActiveFeedContext | null;
-}
 
 const navItems = [
   { icon: Home, label: "Лента", path: "/feed" },
-  { icon: MessageCircle, label: "Чат", path: "/chat", special: true },
-  { icon: Grid3X3, label: "Сервисы", path: "/services" },
+  { icon: MessageCircle, label: "Чаты", path: "/chats" },
+  { icon: Bot, label: "", path: "/chat", special: true },
+  { icon: LayoutGrid, label: "Сервисы", path: "/services" },
 ];
 
-export function BottomNav({ activeFeedItem }: BottomNavProps) {
+export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  const handleNavClick = (item: typeof navItems[0]) => {
-    // Special handling for Chat button when on Feed page with active item
-    if (item.path === "/chat" && location.pathname === "/feed" && activeFeedItem) {
-      const prompt = `Расскажи подробнее про: ${activeFeedItem.title}`;
-      navigate(`/chat?prompt=${encodeURIComponent(prompt)}&context=${encodeURIComponent(activeFeedItem.title)}`);
-    } else {
-      navigate(item.path);
-    }
-  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-card rounded-t-3xl safe-bottom">
@@ -35,12 +21,11 @@ export function BottomNav({ activeFeedItem }: BottomNavProps) {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
 
-          // Special styling for Chat button (center-left position now)
           if (item.special) {
             return (
               <motion.button
                 key={item.path}
-                onClick={() => handleNavClick(item)}
+                onClick={() => navigate(item.path)}
                 className="relative -mt-6"
                 whileTap={{ scale: 0.95 }}
               >
@@ -50,12 +35,6 @@ export function BottomNav({ activeFeedItem }: BottomNavProps) {
                 >
                   <Icon className="w-6 h-6 text-primary-foreground" />
                 </motion.div>
-                <span className={cn(
-                  "text-xs font-medium block text-center mt-1",
-                  isActive ? "text-primary" : "text-muted-foreground"
-                )}>
-                  {item.label}
-                </span>
               </motion.button>
             );
           }
@@ -63,7 +42,7 @@ export function BottomNav({ activeFeedItem }: BottomNavProps) {
           return (
             <motion.button
               key={item.path}
-              onClick={() => handleNavClick(item)}
+              onClick={() => navigate(item.path)}
               className={cn(
                 "flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground"

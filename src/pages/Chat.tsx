@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
@@ -127,8 +127,7 @@ export default function Chat() {
   const hasMessages = messages.length > 0;
 
   const handleClose = () => {
-    setSearchParams({});
-    navigate('/feed');
+    navigate('/chats');
   };
 
   const clearContext = () => {
@@ -166,7 +165,7 @@ export default function Chat() {
       const success = await deleteTopic(currentTopic.id);
       if (success) {
         toast.success("Чат удалён");
-        navigate('/feed');
+        navigate('/chats');
       }
     }
   };
@@ -189,7 +188,7 @@ export default function Chat() {
           onClick={handleClose}
           className="p-2 rounded-full text-muted-foreground hover:bg-accent transition-colors"
         >
-          <X className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
           <AssistantIcon 

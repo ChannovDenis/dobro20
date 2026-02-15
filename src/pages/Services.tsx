@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { userProfile, services } from "@/data/mockData";
+import { services } from "@/data/mockData";
+import { useProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -54,6 +55,8 @@ const categories = [
 
 export default function Services() {
   const navigate = useNavigate();
+  const { profile } = useProfile();
+  const displayName = profile?.display_name || "Пользователь";
 
   const handleClose = () => {
     navigate('/feed');
@@ -124,12 +127,12 @@ export default function Services() {
             className="flex items-center gap-3"
           >
             <Avatar className="w-10 h-10 border-2 border-primary/30">
-              <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
-              <AvatarFallback>{userProfile.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+              <AvatarFallback className="bg-primary text-primary-foreground">{displayName.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
               <p className="text-xs text-muted-foreground">Привет,</p>
-              <h1 className="text-sm font-bold text-foreground">{userProfile.name.split(" ")[0]}</h1>
+              <h1 className="text-sm font-bold text-foreground">{displayName.split(" ")[0]}</h1>
             </div>
           </motion.div>
           

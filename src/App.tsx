@@ -14,6 +14,7 @@ import ExpertDetail from "./pages/ExpertDetail";
 import MiniApp from "./pages/MiniApp";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
+import Chats from "./pages/Chats";
 import History from "./pages/History";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/splash" replace />} />
             <Route path="/splash" element={<SplashScreen />} />
             <Route path="/feed" element={<Feed />} />
+            <Route path="/chats" element={<Chats />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/history" element={<History />} />
             <Route path="/services" element={<Services />} />
