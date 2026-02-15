@@ -155,9 +155,56 @@
     @apply border-border;
   }
 
+  html, body, #root {
+    height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Mobile shell — centers app in a phone-sized frame on desktop */
+  .mobile-shell {
+    max-width: 430px;
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: hsl(var(--background));
+  }
+
+  /* Outer background visible on desktop around the phone frame */
+  .desktop-backdrop {
+    min-height: 100%;
+    background: #0a0a0f;
+  }
+
+  /* On screens wider than 430px show a subtle phone bezel effect */
+  @media (min-width: 431px) {
+    .mobile-shell {
+      box-shadow:
+        0 0 0 1px hsl(var(--border)),
+        0 0 80px hsl(var(--glow-primary));
+      border-radius: 2rem;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      height: calc(100% - 2rem);
+      overflow-y: auto;
+    }
+  }
+
+  /* On actual mobile devices — no bezel, full screen */
+  @media (max-width: 430px) {
+    .mobile-shell {
+      max-width: 100%;
+      border-radius: 0;
+      overflow-y: auto;
+    }
+    .desktop-backdrop {
+      background: hsl(var(--background));
+    }
   }
 }
 
