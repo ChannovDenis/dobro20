@@ -1,0 +1,175 @@
+export interface TenantEscalation {
+  id: string;
+  user: string;
+  avatar: string;
+  service: string;
+  reason: string;
+  time: string;
+  priority: 'high' | 'medium';
+  status: 'in_progress' | 'pending';
+}
+
+export const tenantEscalations: Record<string, TenantEscalation[]> = {
+  dobroservice: [
+    {
+      id: '1',
+      user: 'Анна М.',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+      service: 'Юрист',
+      reason: 'Сложный вопрос по наследству',
+      time: '15 мин назад',
+      priority: 'high',
+      status: 'in_progress',
+    },
+    {
+      id: '2',
+      user: 'Дмитрий К.',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+      service: 'Врач',
+      reason: 'Требуется очная консультация',
+      time: '42 мин назад',
+      priority: 'medium',
+      status: 'pending',
+    },
+    {
+      id: '3',
+      user: 'Елена В.',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop',
+      service: 'Психолог',
+      reason: 'Кризисная ситуация',
+      time: '1 час назад',
+      priority: 'high',
+      status: 'in_progress',
+    },
+  ],
+  gazprombank: [
+    {
+      id: '1',
+      user: 'Сергей П.',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
+      service: 'Юрист',
+      reason: 'Спор по кредитному договору',
+      time: '20 мин назад',
+      priority: 'high',
+      status: 'in_progress',
+    },
+    {
+      id: '2',
+      user: 'Марина Л.',
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
+      service: 'Финансист',
+      reason: 'Возврат страховки при досрочном погашении',
+      time: '1 час назад',
+      priority: 'medium',
+      status: 'pending',
+    },
+    {
+      id: '3',
+      user: 'Олег Т.',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
+      service: 'Финансист',
+      reason: 'Отказ в реструктуризации',
+      time: '2 часа назад',
+      priority: 'high',
+      status: 'pending',
+    },
+  ],
+  wildberries: [
+    {
+      id: '1',
+      user: 'Ирина С.',
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
+      service: 'Юрист',
+      reason: 'Возврат бракованного товара',
+      time: '35 мин назад',
+      priority: 'high',
+      status: 'in_progress',
+    },
+    {
+      id: '2',
+      user: 'Алексей Н.',
+      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
+      service: 'Ассистент',
+      reason: 'Блокировка личного кабинета продавца',
+      time: '1.5 часа назад',
+      priority: 'medium',
+      status: 'pending',
+    },
+  ],
+  pochtarf: [
+    {
+      id: '1',
+      user: 'Наталья Г.',
+      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop',
+      service: 'Юрист',
+      reason: 'Потеря международной посылки',
+      time: '25 мин назад',
+      priority: 'high',
+      status: 'in_progress',
+    },
+    {
+      id: '2',
+      user: 'Владимир Ж.',
+      avatar: 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=100&h=100&fit=crop',
+      service: 'Ассистент',
+      reason: 'Задержка EMS более 30 дней',
+      time: '3 часа назад',
+      priority: 'medium',
+      status: 'pending',
+    },
+  ],
+  mes: [
+    {
+      id: '1',
+      user: 'Татьяна Р.',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+      service: 'Финансист',
+      reason: 'Перерасчёт за отопление',
+      time: '45 мин назад',
+      priority: 'medium',
+      status: 'in_progress',
+    },
+    {
+      id: '2',
+      user: 'Павел Б.',
+      avatar: 'https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=100&h=100&fit=crop',
+      service: 'Юрист',
+      reason: 'Отключение горячей воды без предупреждения',
+      time: '2 часа назад',
+      priority: 'high',
+      status: 'pending',
+    },
+  ],
+  alfa: [
+    {
+      id: '1',
+      user: 'Андрей К.',
+      avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop',
+      service: 'Финансист',
+      reason: 'Инвестиционный спор по брокерскому счёту',
+      time: '10 мин назад',
+      priority: 'high',
+      status: 'in_progress',
+    },
+    {
+      id: '2',
+      user: 'Екатерина М.',
+      avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100&h=100&fit=crop',
+      service: 'Безопасность',
+      reason: 'Блокировка карты за рубежом',
+      time: '50 мин назад',
+      priority: 'high',
+      status: 'pending',
+    },
+    {
+      id: '3',
+      user: 'Роман Д.',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
+      service: 'Юрист',
+      reason: 'Досрочное погашение ипотеки — спор о процентах',
+      time: '3 часа назад',
+      priority: 'medium',
+      status: 'pending',
+    },
+  ],
+};

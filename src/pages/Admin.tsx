@@ -110,7 +110,7 @@ export default function Admin() {
         >
           <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-primary" />
-            Активность за неделю
+            Активность за месяц
           </h2>
           <ActivityChart />
         </motion.div>
