@@ -40,16 +40,33 @@ const TenantContext = createContext<TenantContextValue | undefined>(undefined);
 
 const DEFAULT_TENANT_SLUG = 'default';
 
+// Validate HSL color format to prevent CSS injection
+function sanitizeHSLColor(color: string): string | null {
+  const hslRegex = /^\d{1,3}\s+\d{1,3}%\s+\d{1,3}%$/;
+  if (!hslRegex.test(color.trim())) {
+    console.warn('Invalid HSL color value rejected:', color);
+    return null;
+  }
+  return color.trim();
+}
+
 // Apply tenant theme as CSS variables
 function applyThemeToDocument(theme: TenantTheme, slug: string) {
   const root = document.documentElement;
   root.setAttribute('data-tenant', slug);
-  root.style.setProperty('--tenant-primary', theme.primary);
-  root.style.setProperty('--tenant-secondary', theme.secondary);
-  root.style.setProperty('--tenant-accent', theme.accent);
-  root.style.setProperty('--primary', theme.primary);
-  root.style.setProperty('--ring', theme.primary);
-  root.style.setProperty('--glow-primary', `${theme.primary} / 0.4`);
+
+  const primary = sanitizeHSLColor(theme.primary);
+  const secondary = sanitizeHSLColor(theme.secondary);
+  const accent = sanitizeHSLColor(theme.accent);
+
+  if (primary) {
+    root.style.setProperty('--tenant-primary', primary);
+    root.style.setProperty('--primary', primary);
+    root.style.setProperty('--ring', primary);
+    root.style.setProperty('--glow-primary', `${primary} / 0.4`);
+  }
+  if (secondary) root.style.setProperty('--tenant-secondary', secondary);
+  if (accent) root.style.setProperty('--tenant-accent', accent);
 }
 
 const DEFAULT_QUOTAS: TenantQuotas = {
