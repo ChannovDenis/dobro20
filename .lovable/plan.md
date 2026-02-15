@@ -1,112 +1,103 @@
 
 
-# Создание PRODUCT_SCOPE.md — полный аудит приложения
+# Добросервис 2.0 — Структурные изменения
 
-## Что будет сделано
+## Обзор
 
-Создание файла `PRODUCT_SCOPE.md` в корне проекта с полным описанием текущего состояния приложения "Добросервис".
+Четыре связанных изменения: новый экран "Мои консультации", навигация 4 таба, реальные данные в ProfileHeader, и навигация назад в чате.
 
-## Содержание документа
+---
 
-Документ будет содержать 8 разделов на основе проведённого анализа:
+## 1. Новый экран `/chats` — "Мои консультации"
 
-### 1. Общее описание
-- "Добросервис" — мобильное супер-приложение (B2B2C/B2B2E) для доступа к AI-ассистентам и живым экспертам по 12 направлениям (юрист, врач, психолог, стилист, садовод и др.)
-- White-label платформа с мульти-тенантной архитектурой (Добросервис, Газпромбанк, Wildberries)
-- Роли: конечный пользователь, партнёр-администратор, супер-администратор
-- Бизнес-модель: подписка "Премиум" (заглушка, не реализована)
+**Новый файл:** `src/pages/Chats.tsx`
 
-### 2. Карта экранов (13 экранов)
-Для каждого экрана: описание UI, кликабельных элементов, источника данных и состояний:
+Полноценный экран со списком всех топиков пользователя:
+- Хедер: "Мои консультации" + кнопка "+" (Plus)
+- Поиск: Input с иконкой Search, фильтрация по имени ассистента и тексту последнего сообщения
+- Чипсы-фильтры: Все / Активные / Архив / С экспертом (горизонтальный scroll)
+- Список топиков из БД через `useTopics()` с дополнительным запросом последних сообщений
+- Карточки: иконка ассистента (из `AI_ASSISTANTS`), имя, последнее сообщение (truncate), относительное время, badge "Эксперт" для escalated
+- Тап по карточке: navigate(`/chat?topicId=...`)
+- Пустое состояние: иконка MessageSquare + кнопка "Задать первый вопрос"
+- BottomNav внизу
 
-| Экран | Роут | Данные |
-|-------|------|--------|
-| Splash | `/splash` | Статика |
-| Feed (TikTok-лента) | `/feed` | Моки (15 карточек) |
-| Chat | `/chat` | База данных (topics, topic_messages) |
-| Services (Хаб сервисов) | `/services` | Моки (services, promotions) |
-| Settings | `/settings` | Моки + Auth |
-| Auth (Вход/Регистрация) | `/auth` | База данных (auth) |
-| ServiceDetail | `/service/:id` | Моки (experts) |
-| ExpertDetail | `/service/:id/expert/:expertId` | Моки + localStorage |
-| History | `/history` | Моки + localStorage |
-| MiniApp | `/mini-app/:id` | Моки (заглушка) |
-| Admin | `/admin` | Моки + RLS-проверка ролей |
-| Index | `/` | Редирект на /splash |
-| NotFound | `*` | Статика |
+**Новый файл:** `src/components/chat/NewConsultationSheet.tsx`
 
-Скриншоты были сделаны для всех ключевых экранов.
+Sheet (vaul Drawer) с сеткой ассистентов (4 колонки):
+- Все уникальные ассистенты из `AI_ASSISTANTS` (без дубликатов wellness/style)
+- Каждый: круглая иконка 48x48 + имя (text-xs)
+- Тап: navigate(`/chat?service=...`), Sheet закрывается
 
-### 3. Навигация
-- BottomNav: 3 таба (Лента, Чат, Сервисы)
-- Точки входа: `/splash` → `/feed`
-- Chat открывается как модальное окно (full-screen)
-- Services, History, Settings — полноэкранные модалки с кнопкой X
+**Изменение:** `src/App.tsx` — добавить Route `/chats`
 
-### 4. Реализованная функциональность
-**Работает полностью:**
-- Авторизация (email/password через Supabase Auth + Zod-валидация)
-- AI-чат со стриминговыми ответами (через Gemini 3 Flash)
-- 9 специализированных AI-ассистентов с уникальными персонами
-- Персистентные топики и сообщения в БД
-- Анонимный режим чата (session_id)
-- TikTok-style вертикальная лента
-- Тёмная + светлая тема + Auto-режим
-- Мульти-тенантная цветовая схема
-- RLS-политики для topics, topic_messages, profiles
-- Аналитика событий (analytics_events)
-- Эскалация к эксперту (карточка после 5 сообщений)
+---
 
-### 5. Мок-данные vs реальная логика
-**На моках (захардкожено в mockData.ts):**
-- Все 15 карточек ленты (feedItems)
-- Все эксперты (experts) — 9 человек по 4 сервисам
-- Профиль пользователя (userProfile) — "Денис Чаннов"
-- Мини-приложения (miniApps) — 4 заглушки
-- История консультаций — моковые Booking в localStorage
-- Статистика активности (12 консультаций, 2340 руб. сэкономлено)
-- Промо-карточки (Премиум, Реферал)
-- Quick Actions (Сканер, Оплата, Кэшбэк, Бонусы) — только тосты
+## 2. BottomNav: 4 таба
 
-**Подключено к реальному бэкенду:**
-- Auth (signup/signin/signout)
-- topics + topic_messages (CRUD)
-- public_tenant_info (чтение тенантов)
-- profiles (CRUD по user_id)
-- analytics_events (вставка событий)
-- user_roles (проверка admin-доступа)
-- 4 Edge Functions: chat, lisa-stylist, colortype-analyzer, virtual-tryon
+**Изменение:** `src/components/layout/BottomNav.tsx`
 
-### 6. Дизайн-система
-- Glassmorphism-стиль с backdrop-blur
-- 12 категорийных цветов
-- Шрифт: системный (Inter через Tailwind)
-- Компоненты: полный shadcn/ui кит (50+ компонентов)
-- Адаптивность: mobile-first, нет десктоп-версии
+Новая структура:
+- Таб 1: Home, "Лента", /feed
+- Таб 2: MessageCircle, "Чаты", /chats
+- Таб 3: Bot — центральная приподнятая кнопка (gradient-primary, -mt-6, без label), /chat
+- Таб 4: LayoutGrid, "Сервисы", /services
 
-### 7. Технический стек
-- React 18 + TypeScript + Vite
-- Tailwind CSS + shadcn/ui + Framer Motion
-- Supabase (Auth, PostgreSQL, Edge Functions)
-- TanStack React Query
-- React Router DOM v6
-- Zod (валидация), date-fns (даты), Recharts (графики)
+Убрать `activeFeedItem` prop и связанную с ним логику — теперь кнопка "Чат" всегда ведёт на /chat.
 
-### 8. Известные ограничения и баги
-- Нет RLS-policy на DELETE для topic_messages (очистка не работает)
-- useVoiceRecorder — заглушка (только console.log)
-- Бронирования сохраняются в localStorage, не в БД
-- Нет экрана "Мои чаты" (список топиков)
-- Нет пагинации сообщений (грузятся все)
-- ProfileHeader использует хардкод из mockData
-- Видеозвонки, переносы записей — toast-заглушки
-- Мини-приложения — лендинги без функционала
-- Уведомления — только toast-заглушки
-- Подписка/платежи — не реализованы
-- Поиск — отсутствует
-- Нет CSS-transition при смене темы
+**Изменения в родительских страницах:**
+- `src/pages/Feed.tsx` — убрать `activeFeedItem` state и prop из BottomNav
+- Все страницы, использующие BottomNav, получат обновлённый компонент автоматически
 
-## Технические детали
+---
 
-Файл будет создан как `PRODUCT_SCOPE.md` в корне проекта. Документ написан на русском языке, в формате Markdown. Скриншоты будут описаны текстом (вставка реальных изображений в .md невозможна без хостинга).
+## 3. ProfileHeader и Services — убрать моки
+
+**Изменение:** `src/components/settings/ProfileHeader.tsx`
+- Убрать `import { userProfile }` из mockData
+- Использовать `useProfile()` для получения `display_name` из БД
+- Fallback: "Пользователь" вместо "Денис Чаннов"
+- Avatar fallback: первая буква имени
+- Подписку "Премиум" оставить как есть
+
+**Изменение:** `src/pages/Services.tsx`
+- Убрать `userProfile` из импорта mockData (оставить `services`)
+- Использовать `useProfile()` для имени в хедере
+- Fallback: "Пользователь"
+
+**Изменение:** `src/components/layout/TopBar.tsx`
+- Аналогично убрать `userProfile`, использовать `useProfile()`
+
+---
+
+## 4. Chat: навигация назад
+
+**Изменение:** `src/pages/Chat.tsx`
+- Заменить иконку `X` на `ArrowLeft`
+- `handleClose`: navigate('/chats') вместо navigate('/feed')
+- `handleDelete`: navigate('/chats') вместо navigate('/feed')
+
+---
+
+## Файлы для изменения
+
+| Файл | Действие |
+|------|----------|
+| `src/pages/Chats.tsx` | Создать |
+| `src/components/chat/NewConsultationSheet.tsx` | Создать |
+| `src/components/layout/BottomNav.tsx` | Переписать (4 таба) |
+| `src/pages/Feed.tsx` | Упростить (убрать activeFeedItem) |
+| `src/components/settings/ProfileHeader.tsx` | useProfile() вместо mockData |
+| `src/pages/Services.tsx` | useProfile() вместо mockData для хедера |
+| `src/components/layout/TopBar.tsx` | useProfile() вместо mockData |
+| `src/pages/Chat.tsx` | ArrowLeft, navigate('/chats') |
+| `src/App.tsx` | Добавить Route /chats |
+
+## Что НЕ трогаем
+
+- Edge Functions, AI-логику, SSE-стриминг
+- Авторизацию
+- Темизацию
+- Feed-карточки
+- useTopics.ts, useChat.ts, useProfile.ts — логика не меняется
 
