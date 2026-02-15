@@ -2,9 +2,11 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bot } from "lucide-react";
+import { useTenantContext } from "@/contexts/TenantContext";
 
 export default function SplashScreen() {
   const navigate = useNavigate();
+  const { tenant } = useTenantContext();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -49,7 +51,7 @@ export default function SplashScreen() {
           transition={{ delay: 0.3 }}
           className="text-3xl font-bold text-foreground tracking-wider glow-text"
         >
-          ДОБРОСЕРВИС
+          {tenant?.appTitle || 'ДОБРОСЕРВИС'}
         </motion.h1>
 
         <motion.p
@@ -58,7 +60,7 @@ export default function SplashScreen() {
           transition={{ delay: 0.5 }}
           className="text-muted-foreground mt-2"
         >
-          Эксперты и AI в одном приложении
+          {tenant?.appSubtitle || 'Ваш AI-помощник на каждый день'}
         </motion.p>
       </motion.div>
 

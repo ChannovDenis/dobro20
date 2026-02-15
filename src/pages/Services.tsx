@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -10,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { services } from "@/data/mockData";
 import { useProfile } from "@/hooks/useProfile";
+import { useTenantContext } from "@/contexts/TenantContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -56,7 +58,28 @@ const categories = [
 export default function Services() {
   const navigate = useNavigate();
   const { profile } = useProfile();
+  const { tenant } = useTenantContext();
   const displayName = profile?.display_name || "Пользователь";
+
+  const enabledServices = tenant?.enabled_services || [];
+
+  // Filter services by tenant's enabledServices
+  const filteredServices = useMemo(() => {
+    if (enabledServices.length === 0) return services;
+    return enabledServices
+      .map(id => services.find(s => s.id === id))
+      .filter(Boolean) as typeof services;
+  }, [enabledServices]);
+
+  // Filter categories to only show non-empty ones
+  const filteredCategories = useMemo(() => {
+    return categories
+      .map(cat => ({
+        ...cat,
+        services: cat.services.filter(sId => filteredServices.some(s => s.id === sId)),
+      }))
+      .filter(cat => cat.services.length > 0);
+  }, [filteredServices]);
 
   const handleClose = () => {
     navigate('/feed');
@@ -262,7 +285,7 @@ export default function Services() {
       </section>
 
       {/* Service categories */}
-      {categories.map((category, catIndex) => (
+      {filteredCategories.map((category, catIndex) => (
         <section key={category.id} className="px-4 py-3">
           <motion.div
             initial={{ opacity: 0 }}
