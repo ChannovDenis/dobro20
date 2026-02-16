@@ -171,7 +171,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          ...(validation.messages ?? []),
+          ...validation.messages,
         ],
         stream: true,
       }),

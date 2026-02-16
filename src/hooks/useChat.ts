@@ -4,7 +4,6 @@ import { detectStyleMode, getContextualActions } from "@/constants/chatActions";
 import { getNextTrends } from "@/constants/trends";
 import { getSessionId } from "@/lib/session";
 import { getSupabaseWithSession } from "@/lib/supabaseWithSession";
-import { useTenant } from "@/hooks/useTenant";
 
 // Callback type for topic auto-creation
 export type TopicAutoCreatedCallback = (topicId: string, serviceType: string) => void;
@@ -61,7 +60,6 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
   const [topicId, setTopicId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const isCreatingTopic = useRef(false);
-  const { tenantSlug } = useTenant();
 
   // Load messages from DB when topicId changes
   useEffect(() => {
@@ -217,7 +215,6 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
       body: JSON.stringify({
         messages: conversationHistory,
         isStyleMode,
-        tenantSlug: tenantSlug || "default",
       }),
     });
 

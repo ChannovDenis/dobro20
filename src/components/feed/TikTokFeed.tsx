@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { FeedItem } from "@/data/mockData";
-import { useFeed } from "@/hooks/useFeed";
+import { feedItems, FeedItem } from "@/data/mockData";
 import { FeedCard } from "./FeedCard";
 import { PromoCard } from "./PromoCard";
 
@@ -11,7 +10,6 @@ interface TikTokFeedProps {
 export function TikTokFeed({ onActiveItemChange }: TikTokFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const { feedItems } = useFeed();
 
   useEffect(() => {
     const container = containerRef.current;
@@ -33,7 +31,7 @@ export function TikTokFeed({ onActiveItemChange }: TikTokFeedProps) {
     if (onActiveItemChange && feedItems[activeIndex]) {
       onActiveItemChange(feedItems[activeIndex]);
     }
-  }, [activeIndex, onActiveItemChange, feedItems]);
+  }, [activeIndex, onActiveItemChange]);
 
   return (
     <div
