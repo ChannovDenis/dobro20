@@ -94,6 +94,7 @@ export const miniApps: MiniApp[] = [
   { id: "gpb-architect", name: "AI-Архитектор", icon: "🏠", color: "finance", description: "Фото комнаты → дизайн → смета" },
   { id: "mes-protection", name: "Защита и справедливость", icon: "🛡️", color: "security", description: "Проверка квитанций ЖКХ" },
   { id: "msb-skills", name: "AI для бизнеса", icon: "💼", color: "assistant", description: "15+ AI-навыков для МСБ" },
+  { id: "wb-stylist", name: "AI-Стилист", icon: "👗", color: "style", description: "Подбор образа и гардероба" },
 ];
 
 // TikTok-style feed items with full-screen vertical images
@@ -375,6 +376,19 @@ export const feedItems: FeedItem[] = [
     tags: ["Приложение", "Бизнес"],
     miniAppId: "msb-skills",
     ctaText: "Открыть каталог",
+    likes: 0,
+    comments: 0,
+    shares: 0,
+  },
+  {
+    id: "promo-wb",
+    type: "miniapp-promo",
+    title: "AI-Стилист: подберёт идеальный образ",
+    description: "Загрузите фото — AI проанализирует ваш стиль и подберёт товары с Wildberries",
+    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=1400&fit=crop",
+    tags: ["Приложение", "Стиль"],
+    miniAppId: "wb-stylist",
+    ctaText: "Подобрать образ",
     likes: 0,
     comments: 0,
     shares: 0,

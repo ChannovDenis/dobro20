@@ -146,6 +146,12 @@ function getAppFeatures(appId: string): string[] {
       "AI-маркетолог и SMM",
       "AI-аналитик и прогнозы",
     ],
+    "wb-stylist": [
+      "Анализ фото и цветотипа",
+      "Подбор стиля и образа",
+      "Карточки товаров Wildberries",
+      "Расчёт стоимости образа",
+    ],
   };
   
   return features[appId] || ["Функция в разработке"];

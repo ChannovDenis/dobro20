@@ -18,6 +18,7 @@ const MiniApp = lazy(() => import("./pages/MiniApp"));
 const GPBArchitect = lazy(() => import("./pages/GPBArchitect"));
 const MESProtection = lazy(() => import("./pages/MESProtection"));
 const MSBSkills = lazy(() => import("./pages/MSBSkills"));
+const WBStylist = lazy(() => import("./pages/WBStylist"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Chats = lazy(() => import("./pages/Chats"));
@@ -57,6 +58,7 @@ const App = () => (
                   <Route path="/mini-app/gpb-architect" element={<GPBArchitect />} />
                   <Route path="/mini-app/mes-protection" element={<MESProtection />} />
                   <Route path="/mini-app/msb-skills" element={<MSBSkills />} />
+                  <Route path="/mini-app/wb-stylist" element={<WBStylist />} />
                   <Route path="/mini-app/:id" element={<MiniApp />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/auth" element={<Auth />} />
