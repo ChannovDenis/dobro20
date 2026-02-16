@@ -1,18 +1,14 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { Message, ChatAction, ColorPaletteData, EscalationData } from "@/types/chat";
+import { useState, useCallback, useEffect } from "react";
+import { Message, ChatAction, ColorPaletteData, TrendItem } from "@/types/chat";
 import { detectStyleMode, getContextualActions } from "@/constants/chatActions";
 import { getNextTrends } from "@/constants/trends";
 import { getSessionId } from "@/lib/session";
-import { getSupabaseWithSession } from "@/lib/supabaseWithSession";
-
-// Callback type for topic auto-creation
-export type TopicAutoCreatedCallback = (topicId: string, serviceType: string) => void;
 
 const LISA_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lisa-stylist`;
 const COLORTYPE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/colortype-analyzer`;
 const TRYON_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/virtual-tryon`;
 
-const ESCALATION_THRESHOLD = 5;
+const STORAGE_KEY = 'dobro-chat-history';
 
 // Helper to get auth headers with session ID
 function getAuthHeaders(): Record<string, string> {
@@ -23,172 +19,24 @@ function getAuthHeaders(): Record<string, string> {
   };
 }
 
-// Convert DB message to local Message format
-interface DBMessage {
-  id: string;
-  role: "user" | "assistant" | "system" | "expert";
-  content: string;
-  metadata: Record<string, unknown> | null;
-  created_at: string | null;
-}
-
-function dbMessageToLocal(dbMsg: DBMessage): Message {
-  const metadata = dbMsg.metadata || {};
-  return {
-    id: crypto.randomUUID(),
-    dbId: dbMsg.id,
-    role: dbMsg.role === "user" ? "user" : "assistant",
-    content: dbMsg.content,
-    imageUrl: metadata.imageUrl as string | undefined,
-    resultImageUrl: metadata.resultImageUrl as string | undefined,
-    beforeImageUrl: metadata.beforeImageUrl as string | undefined,
-    buttons: metadata.buttons as Message["buttons"],
-    colorPalette: metadata.colorPalette as Message["colorPalette"],
-    trendGallery: metadata.trendGallery as Message["trendGallery"],
-    clothingOptions: metadata.clothingOptions as Message["clothingOptions"],
-    escalation: metadata.escalation as Message["escalation"],
-  };
-}
-
-export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function useChat() {
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isStyleMode, setIsStyleMode] = useState(false);
   const [uploadedPhoto, setUploadedPhoto] = useState<{ file: File; url: string } | null>(null);
   const [lastAction, setLastAction] = useState<string | undefined>();
-  const [serviceType, setServiceType] = useState<string | null>(null);
-  const [topicId, setTopicId] = useState<string | null>(null);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const isCreatingTopic = useRef(false);
 
-  // Load messages from DB when topicId changes
+  // Persist messages to localStorage
   useEffect(() => {
-    if (!topicId) {
-      setMessages([]);
-      return;
-    }
-
-    const loadMessagesFromDB = async () => {
-      setIsLoadingHistory(true);
-      try {
-        const supabase = getSupabaseWithSession();
-        const { data, error } = await supabase
-          .from("topic_messages")
-          .select("*")
-          .eq("topic_id", topicId)
-          .order("created_at", { ascending: true });
-
-        if (error) {
-          console.error("Error loading messages:", error);
-          return;
-        }
-
-        if (data) {
-          const loadedMessages = data.map((m) => dbMessageToLocal(m as DBMessage));
-          setMessages(loadedMessages);
-        }
-      } catch (err) {
-        console.error("Failed to load messages:", err);
-      } finally {
-        setIsLoadingHistory(false);
-      }
-    };
-
-    loadMessagesFromDB();
-  }, [topicId]);
-
-  // Save message to database
-  const saveMessageToDB = useCallback(
-    async (
-      role: "user" | "assistant",
-      content: string,
-      metadata?: Record<string, unknown>,
-      overrideTopicId?: string
-    ): Promise<string | null> => {
-      const targetTopicId = overrideTopicId ?? topicId;
-      if (!targetTopicId) {
-        console.warn("No topic selected, cannot save message");
-        return null;
-      }
-
-      try {
-        const supabase = getSupabaseWithSession();
-        const { data, error } = await supabase
-          .from("topic_messages")
-          .insert([{
-            topic_id: targetTopicId,
-            role,
-            content,
-            metadata: metadata as unknown as null,
-          }])
-          .select("id")
-          .single();
-
-        if (error) {
-          console.error("Error saving message:", error);
-          return null;
-        }
-
-        return data?.id || null;
-      } catch (err) {
-        console.error("Failed to save message:", err);
-        return null;
-      }
-    },
-    [topicId]
-  );
-
-  // Ensure topic exists before saving messages (auto-create if needed)
-  const ensureTopicExists = useCallback(
-    async (firstMessage: string): Promise<string | null> => {
-      // Already have a topic
-      if (topicId) return topicId;
-      
-      // Prevent double creation
-      if (isCreatingTopic.current) return null;
-      isCreatingTopic.current = true;
-
-      try {
-        const supabase = getSupabaseWithSession();
-        const { data: authData } = await supabase.auth.getUser();
-        const user = authData?.user;
-        const sessionId = getSessionId();
-        
-        // Create title from first message (truncated)
-        const title = firstMessage.slice(0, 50) + (firstMessage.length > 50 ? '...' : '');
-        const currentService = serviceType || 'general';
-        
-        const { data, error } = await supabase
-          .from('topics')
-          .insert({
-            title,
-            service_type: currentService,
-            session_id: user ? null : sessionId,
-            user_id: user?.id ?? null,
-          })
-          .select('id')
-          .single();
-
-        if (error) {
-          console.error('Failed to create topic:', error);
-          return null;
-        }
-
-        const newTopicId = data.id;
-        setTopicId(newTopicId);
-        
-        // Notify parent component about auto-created topic
-        if (onTopicAutoCreated) {
-          onTopicAutoCreated(newTopicId, currentService);
-        }
-
-        return newTopicId;
-      } finally {
-        isCreatingTopic.current = false;
-      }
-    },
-    [topicId, serviceType, onTopicAutoCreated]
-  );
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  }, [messages]);
 
   const addMessage = useCallback((message: Omit<Message, "id">) => {
     const newMessage: Message = {
@@ -281,19 +129,12 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
 
   const sendMessage = useCallback(
     async (content: string) => {
-      // Ensure topic exists (auto-create if needed)
-      const currentTopicId = await ensureTopicExists(content);
-      if (!currentTopicId) {
-        console.warn("Failed to ensure topic exists");
-        return;
-      }
-
       // Detect style mode from keywords
       if (detectStyleMode(content)) {
         setIsStyleMode(true);
       }
 
-      // Add user message locally
+      // Add user message
       const userMessage: Message = {
         id: crypto.randomUUID(),
         role: "user",
@@ -302,13 +143,6 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
       };
       setMessages((prev) => [...prev, userMessage]);
       setIsLoading(true);
-
-      // Save user message to DB
-      const userMetadata: Record<string, unknown> = {};
-      if (uploadedPhoto?.url) {
-        userMetadata.imageUrl = uploadedPhoto.url;
-      }
-      await saveMessageToDB("user", content, Object.keys(userMetadata).length > 0 ? userMetadata : undefined, currentTopicId);
 
       // Build conversation history
       const history = [...messages, userMessage].map((m) => ({
@@ -322,42 +156,17 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
           history
         );
 
-        // Add contextual action buttons and escalation
-        const buttons = getContextualActions({
-          hasPhoto: !!uploadedPhoto,
-          lastAction,
-          isStyleMode,
-        });
-
-        // Check if we should show escalation (after threshold messages)
-        const totalMessages = messages.length + 2;
-        let escalation: EscalationData | undefined;
-
-        if (serviceType && totalMessages >= ESCALATION_THRESHOLD) {
-          escalation = {
-            serviceId: serviceType,
-          };
+        // Add contextual action buttons
+        if (messageId) {
+          const buttons = getContextualActions({
+            hasPhoto: !!uploadedPhoto,
+            lastAction,
+            isStyleMode,
+          });
+          if (buttons.length > 0) {
+            updateMessage(messageId, { buttons });
+          }
         }
-
-        const updates: Partial<Message> = {};
-        if (buttons.length > 0) updates.buttons = buttons;
-        if (escalation) updates.escalation = escalation;
-
-        if (messageId && Object.keys(updates).length > 0) {
-          updateMessage(messageId, updates);
-        }
-
-        // Save assistant message to DB with metadata
-        const assistantMetadata: Record<string, unknown> = {};
-        if (buttons.length > 0) assistantMetadata.buttons = buttons;
-        if (escalation) assistantMetadata.escalation = escalation;
-        
-        await saveMessageToDB(
-          "assistant",
-          assistantContent,
-          Object.keys(assistantMetadata).length > 0 ? assistantMetadata : undefined,
-          currentTopicId
-        );
 
         // Clear uploaded photo after sending
         if (uploadedPhoto) {
@@ -373,7 +182,7 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
         setIsLoading(false);
       }
     },
-    [messages, isStyleMode, uploadedPhoto, lastAction, serviceType, ensureTopicExists, addMessage, updateMessage, saveMessageToDB]
+    [messages, isStyleMode, uploadedPhoto, lastAction, addMessage, updateMessage]
   );
 
   const handleAction = useCallback(
@@ -385,9 +194,10 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
         switch (action) {
           case "tryon":
             if (!uploadedPhoto) {
-              const content = "👗 Для виртуальной примерки мне нужно твоё фото! Загрузи селфи или фото в полный рост, и я покажу, как на тебе будут смотреться разные образы ✨";
-              addMessage({ role: "assistant", content });
-              await saveMessageToDB("assistant", content);
+              addMessage({
+                role: "assistant",
+                content: "👗 Для виртуальной примерки мне нужно твоё фото! Загрузи селфи или фото в полный рост, и я покажу, как на тебе будут смотреться разные образы ✨",
+              });
             } else {
               const tryonResponse = await fetch(TRYON_URL, {
                 method: "POST",
@@ -403,29 +213,23 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
                 throw new Error("Ошибка примерки");
               }
               const result = await tryonResponse.json();
-              const buttons = getContextualActions({ hasPhoto: true, lastAction: "tryon", isStyleMode: true });
 
-              const content = `✨ Вот как ты выглядишь в образе "${result.description}"! Нравится? Могу показать другие стили 👗`;
               addMessage({
                 role: "assistant",
-                content,
+                content: `✨ Вот как ты выглядишь в образе "${result.description}"! Нравится? Могу показать другие стили 👗`,
                 resultImageUrl: result.imageUrl,
                 beforeImageUrl: uploadedPhoto.url,
-                buttons,
-              });
-              await saveMessageToDB("assistant", content, {
-                resultImageUrl: result.imageUrl,
-                beforeImageUrl: uploadedPhoto.url,
-                buttons,
+                buttons: getContextualActions({ hasPhoto: true, lastAction: "tryon", isStyleMode: true }),
               });
             }
             break;
 
           case "colortype":
             if (!uploadedPhoto) {
-              const content = "🎨 Для анализа цветотипа нужно твоё фото при дневном освещении. Загрузи фото лица, и я определю твой цветотип и подберу идеальную палитру!";
-              addMessage({ role: "assistant", content });
-              await saveMessageToDB("assistant", content);
+              addMessage({
+                role: "assistant",
+                content: "🎨 Для анализа цветотипа нужно твоё фото при дневном освещении. Загрузи фото лица, и я определю твой цветотип и подберу идеальную палитру!",
+              });
             } else {
               const colortypeResponse = await fetch(COLORTYPE_URL, {
                 method: "POST",
@@ -438,45 +242,36 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
                 throw new Error("Ошибка анализа");
               }
               const colorData: ColorPaletteData = await colortypeResponse.json();
-              const buttons = getContextualActions({ hasPhoto: true, lastAction: "colortype", isStyleMode: true });
 
-              const content = `🎨 Твой цветотип — **${colorData.type} (${colorData.season})**! ${colorData.description}`;
               addMessage({
                 role: "assistant",
-                content,
+                content: `🎨 Твой цветотип — **${colorData.type} (${colorData.season})**! ${colorData.description}`,
                 colorPalette: colorData,
-                buttons,
+                buttons: getContextualActions({ hasPhoto: true, lastAction: "colortype", isStyleMode: true }),
               });
-              await saveMessageToDB("assistant", content, { colorPalette: colorData, buttons });
             }
             break;
 
           case "trends_2026":
           case "more_trends":
             const trends = getNextTrends(3);
-            const trendButtons = [
-              { id: "more", icon: "➕", label: "Ещё тренды", action: "more_trends" as const, variant: "secondary" as const },
-            ];
-            const trendContent = "✨ Вот главные тренды 2026 года! Листай карточки и выбирай, что тебе ближе 👇";
             addMessage({
               role: "assistant",
-              content: trendContent,
+              content: "✨ Вот главные тренды 2026 года! Листай карточки и выбирай, что тебе ближе 👇",
               trendGallery: trends,
-              buttons: trendButtons,
+              buttons: [
+                { id: "more", icon: "➕", label: "Ещё тренды", action: "more_trends", variant: "secondary" },
+              ],
             });
-            await saveMessageToDB("assistant", trendContent, { trendGallery: trends, buttons: trendButtons });
             break;
 
           case "style":
             setIsStyleMode(true);
-            const styleButtons = getContextualActions({ hasPhoto: !!uploadedPhoto, lastAction: "style", isStyleMode: true });
-            const styleContent = "👔 Отлично! Расскажи, какой стиль тебе ближе — casual, классика, спорт-шик? Или загрузи фото образа, который тебе нравится, и я подберу что-то похожее!";
             addMessage({
               role: "assistant",
-              content: styleContent,
-              buttons: styleButtons,
+              content: "👔 Отлично! Расскажи, какой стиль тебе ближе — casual, классика, спорт-шик? Или загрузи фото образа, который тебе нравится, и я подберу что-то похожее!",
+              buttons: getContextualActions({ hasPhoto: !!uploadedPhoto, lastAction: "style", isStyleMode: true }),
             });
-            await saveMessageToDB("assistant", styleContent, { buttons: styleButtons });
             break;
 
           case "upload_photo":
@@ -485,15 +280,17 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
             break;
 
           case "try_another":
-            const tryAnotherContent = "🔄 Какой стиль попробуем? Casual, романтика, офисный look, или что-то дерзкое?";
-            addMessage({ role: "assistant", content: tryAnotherContent });
-            await saveMessageToDB("assistant", tryAnotherContent);
+            addMessage({
+              role: "assistant",
+              content: "🔄 Какой стиль попробуем? Casual, романтика, офисный look, или что-то дерзкое?",
+            });
             break;
 
           case "where_to_buy":
-            const buyContent = "🛒 Скоро здесь появятся ссылки на магазины-партнёры! А пока могу подсказать, на что обратить внимание при выборе 💫";
-            addMessage({ role: "assistant", content: buyContent });
-            await saveMessageToDB("assistant", buyContent);
+            addMessage({
+              role: "assistant",
+              content: "🛒 Скоро здесь появятся ссылки на магазины-партнёры! А пока могу подсказать, на что обратить внимание при выборе 💫",
+            });
             break;
         }
       } catch (error) {
@@ -506,7 +303,7 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
         setIsLoading(false);
       }
     },
-    [uploadedPhoto, addMessage, saveMessageToDB]
+    [uploadedPhoto, addMessage]
   );
 
   const handleImageUpload = useCallback((file: File, url: string) => {
@@ -523,12 +320,12 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
 
   const clearHistory = useCallback(() => {
     setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   return {
     messages,
     isLoading,
-    isLoadingHistory,
     isStyleMode,
     uploadedPhoto,
     sendMessage,
@@ -536,9 +333,5 @@ export function useChat(onTopicAutoCreated?: TopicAutoCreatedCallback) {
     handleImageUpload,
     clearUploadedPhoto,
     clearHistory,
-    setServiceType,
-    setTopicId,
-    serviceType,
-    topicId,
   };
 }

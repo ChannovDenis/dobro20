@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from './useTenant';
-import { getSessionId } from '@/lib/session';
-import { getSupabaseWithSession } from '@/lib/supabaseWithSession';
 
 export type TopicStatus = 'active' | 'archived' | 'escalated';
 export type MessageRole = 'user' | 'assistant' | 'system' | 'expert';
@@ -39,9 +38,6 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
   const [messages, setMessages] = useState<TopicMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Get supabase client with session headers
-  const supabase = useMemo(() => getSupabaseWithSession(), []);
 
   // Fetch all topics for current user
   const fetchTopics = useCallback(async () => {
@@ -98,9 +94,7 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const sessionId = getSessionId();
 
-      // For anonymous users, we need session_id
       const insertData: {
         user_id: string | null;
         tenant_id: string | null;
@@ -108,7 +102,6 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
         service_type: string | null;
         context: Record<string, unknown> | null;
         status: 'active' | 'archived' | 'escalated';
-        session_id: string | null;
       } = {
         user_id: user?.id ?? null,
         tenant_id: tenantId ?? null,
@@ -116,10 +109,8 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
         service_type: serviceType ?? null,
         context: context ?? null,
         status: 'active',
-        session_id: user ? null : sessionId, // Only set session_id for anonymous users
       };
 
-      // Add session_id header for RLS policy
       const { data, error: insertError } = await supabase
         .from('topics')
         .insert(insertData as never)
@@ -237,28 +228,6 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
     }
   }, [currentTopic]);
 
-  // Clear all messages in a topic (without deleting the topic)
-  const clearMessages = useCallback(async (topicId: string) => {
-    try {
-      const { error: deleteError } = await supabase
-        .from('topic_messages')
-        .delete()
-        .eq('topic_id', topicId);
-
-      if (deleteError) throw deleteError;
-
-      if (currentTopic?.id === topicId) {
-        setMessages([]);
-      }
-
-      return true;
-    } catch (err) {
-      console.error('Failed to clear messages:', err);
-      setError('Не удалось очистить сообщения');
-      return false;
-    }
-  }, [currentTopic]);
-
   // Delete a topic
   const deleteTopic = useCallback(async (topicId: string) => {
     try {
@@ -275,12 +244,9 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
         setCurrentTopic(null);
         setMessages([]);
       }
-
-      return true;
     } catch (err) {
       console.error('Failed to delete topic:', err);
       setError('Не удалось удалить чат');
-      return false;
     }
   }, [currentTopic]);
 
@@ -318,7 +284,6 @@ export function useTopics(options: UseTopicsOptions = { autoLoad: true }) {
     addMessage,
     updateTopicTitle,
     updateTopicStatus,
-    clearMessages,
     deleteTopic,
     selectTopic,
     autoGenerateTitle,

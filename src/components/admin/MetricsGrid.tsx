@@ -1,62 +1,45 @@
 import { motion } from "framer-motion";
-import { MessageSquare, AlertTriangle, ThumbsUp, Clock, LucideIcon } from "lucide-react";
-import { dashboardMetrics } from "@/data/tenantMetrics";
-import { useTenant } from "@/hooks/useTenant";
+import { Users, MessageSquare, Calendar, TrendingUp } from "lucide-react";
 
-interface MetricCard {
-  id: string;
-  label: string;
-  value: string;
-  change: string;
-  positive: boolean;
-  icon: LucideIcon;
-}
-
-function buildMetrics(tenantId: string): MetricCard[] {
-  const m = dashboardMetrics[tenantId] ?? dashboardMetrics.dobroservice;
-  return [
-    {
-      id: 'aiRequests',
-      label: 'AI-обращения',
-      value: m.aiRequests.value.toLocaleString('ru-RU'),
-      change: `${m.aiRequests.change > 0 ? '+' : ''}${m.aiRequests.change}%`,
-      positive: m.aiRequests.change > 0,
-      icon: MessageSquare,
-    },
-    {
-      id: 'escalations',
-      label: 'Эскалации',
-      value: m.escalations.value.toLocaleString('ru-RU'),
-      change: `${m.escalations.change > 0 ? '+' : ''}${m.escalations.change}%`,
-      positive: m.escalations.change < 0, // fewer escalations = good
-      icon: AlertTriangle,
-    },
-    {
-      id: 'nps',
-      label: 'NPS',
-      value: `${m.nps.value}%`,
-      change: `${m.nps.change > 0 ? '+' : ''}${m.nps.change}%`,
-      positive: m.nps.change > 0,
-      icon: ThumbsUp,
-    },
-    {
-      id: 'avgTime',
-      label: 'Ср. время',
-      value: `${m.avgTime.value} мин`,
-      change: `${m.avgTime.change > 0 ? '+' : ''}${m.avgTime.change}%`,
-      positive: m.avgTime.change < 0, // less time = good
-      icon: Clock,
-    },
-  ];
-}
+const METRICS = [
+  {
+    id: "dau",
+    label: "DAU",
+    value: "1,234",
+    change: "+12%",
+    positive: true,
+    icon: Users,
+  },
+  {
+    id: "ai_requests",
+    label: "AI-обращения",
+    value: "8,567",
+    change: "+24%",
+    positive: true,
+    icon: MessageSquare,
+  },
+  {
+    id: "bookings",
+    label: "Записи",
+    value: "342",
+    change: "+8%",
+    positive: true,
+    icon: Calendar,
+  },
+  {
+    id: "conversion",
+    label: "Конверсия",
+    value: "4.2%",
+    change: "-0.3%",
+    positive: false,
+    icon: TrendingUp,
+  },
+];
 
 export function MetricsGrid() {
-  const { tenantId } = useTenant();
-  const metrics = buildMetrics(tenantId ?? 'dobroservice');
-
   return (
     <div className="grid grid-cols-2 gap-3">
-      {metrics.map((metric, index) => {
+      {METRICS.map((metric, index) => {
         const Icon = metric.icon;
         return (
           <motion.div

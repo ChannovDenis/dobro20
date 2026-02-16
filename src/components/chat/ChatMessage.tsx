@@ -6,7 +6,6 @@ import { Message, ChatAction } from "@/types/chat";
 import { ActionButtons } from "./ActionButtons";
 import { ColorPalette } from "./ColorPalette";
 import { TrendGallery } from "./TrendGallery";
-import { EscalationCard } from "./EscalationCard";
 
 interface ChatMessageProps {
   message: Message;
@@ -92,11 +91,6 @@ export function ChatMessage({ message, onAction }: ChatMessageProps) {
         {/* Trend gallery */}
         {!isUser && message.trendGallery && message.trendGallery.length > 0 && (
           <TrendGallery items={message.trendGallery} />
-        )}
-
-        {/* Escalation card */}
-        {!isUser && message.escalation && (
-          <EscalationCard data={message.escalation} />
         )}
 
         {/* Action buttons */}

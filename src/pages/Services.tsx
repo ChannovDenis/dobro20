@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -9,9 +8,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { services } from "@/data/mockData";
-import { useProfile } from "@/hooks/useProfile";
-import { useTenantContext } from "@/contexts/TenantContext";
+import { userProfile, services } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -57,36 +54,6 @@ const categories = [
 
 export default function Services() {
   const navigate = useNavigate();
-  const { profile } = useProfile();
-  const { tenant } = useTenantContext();
-  const displayName = profile?.display_name || "Пользователь";
-
-  const enabledServices = tenant?.enabled_services || [];
-
-  const daysSinceJoined = useMemo(() => {
-    if (!profile?.created_at) return 1;
-    const created = new Date(profile.created_at);
-    const now = new Date();
-    return Math.max(1, Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)));
-  }, [profile?.created_at]);
-
-  // Filter services by tenant's enabledServices
-  const filteredServices = useMemo(() => {
-    if (enabledServices.length === 0) return services;
-    return enabledServices
-      .map(id => services.find(s => s.id === id))
-      .filter(Boolean) as typeof services;
-  }, [enabledServices]);
-
-  // Filter categories to only show non-empty ones
-  const filteredCategories = useMemo(() => {
-    return categories
-      .map(cat => ({
-        ...cat,
-        services: cat.services.filter(sId => filteredServices.some(s => s.id === sId)),
-      }))
-      .filter(cat => cat.services.length > 0);
-  }, [filteredServices]);
 
   const handleClose = () => {
     navigate('/feed');
@@ -157,12 +124,12 @@ export default function Services() {
             className="flex items-center gap-3"
           >
             <Avatar className="w-10 h-10 border-2 border-primary/30">
-              <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
-              <AvatarFallback className="bg-primary text-primary-foreground">{displayName.charAt(0)}</AvatarFallback>
+              <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
+              <AvatarFallback>{userProfile.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
               <p className="text-xs text-muted-foreground">Привет,</p>
-              <h1 className="text-sm font-bold text-foreground">{displayName.split(" ")[0]}</h1>
+              <h1 className="text-sm font-bold text-foreground">{userProfile.name.split(" ")[0]}</h1>
             </div>
           </motion.div>
           
@@ -292,7 +259,7 @@ export default function Services() {
       </section>
 
       {/* Service categories */}
-      {filteredCategories.map((category, catIndex) => (
+      {categories.map((category, catIndex) => (
         <section key={category.id} className="px-4 py-3">
           <motion.div
             initial={{ opacity: 0 }}
@@ -353,13 +320,17 @@ export default function Services() {
             <TrendingUp className="w-5 h-5 text-primary" />
             <h3 className="font-semibold text-foreground">Твоя активность</h3>
           </div>
-          <div className="grid grid-cols-2 gap-4 text-center">
+          <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold text-foreground">{profile?.ai_messages_used ?? 0}</p>
-              <p className="text-xs text-muted-foreground">AI-сообщений</p>
+              <p className="text-2xl font-bold text-foreground">12</p>
+              <p className="text-xs text-muted-foreground">Консультаций</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{daysSinceJoined}</p>
+              <p className="text-2xl font-bold text-primary">₽2,340</p>
+              <p className="text-xs text-muted-foreground">Сэкономлено</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">47</p>
               <p className="text-xs text-muted-foreground">Дней с нами</p>
             </div>
           </div>

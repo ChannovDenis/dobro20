@@ -3,7 +3,8 @@ import { Send, Plus, Loader2, Mic, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
-import { NewTopicModal } from "./NewTopicModal";
+import { TemplatesModal } from "./TemplatesModal";
+import { useSearchParams } from "react-router-dom";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -12,7 +13,6 @@ interface ChatInputProps {
   uploadedPhotoUrl?: string;
   onClearPhoto?: () => void;
   initialPrompt?: string;
-  onTopicCreated?: (topicId: string, serviceType: string) => void;
 }
 
 export function ChatInput({ 
@@ -22,7 +22,6 @@ export function ChatInput({
   uploadedPhotoUrl,
   onClearPhoto,
   initialPrompt,
-  onTopicCreated,
 }: ChatInputProps) {
   const [message, setMessage] = useState(initialPrompt || "");
   const [showMenu, setShowMenu] = useState(false);
@@ -50,6 +49,10 @@ export function ChatInput({
     }
   };
 
+  const handleSelectTemplate = (prompt: string) => {
+    setMessage(prompt);
+  };
+
   const handlePhotoClick = () => {
     fileInputRef.current?.click();
     setShowMenu(false);
@@ -75,13 +78,13 @@ export function ChatInput({
         className="hidden"
       />
 
-      {/* New Topic Modal */}
-      <NewTopicModal
+      {/* Templates Modal */}
+      <TemplatesModal
         isOpen={showMenu}
         onClose={() => setShowMenu(false)}
+        onSelectTemplate={handleSelectTemplate}
         onPhotoClick={onImageSelect ? handlePhotoClick : undefined}
         showPhotoButton={!!onImageSelect}
-        onTopicCreated={onTopicCreated}
       />
 
       {/* Uploaded photo preview */}

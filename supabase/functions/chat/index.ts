@@ -142,11 +142,8 @@ serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      console.error("[INTERNAL] Missing LOVABLE_API_KEY environment variable");
-      return new Response(
-        JSON.stringify({ error: "Сервис временно недоступен" }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.error("Missing API key");
+      throw new Error("Configuration error");
     }
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -158,7 +155,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          ...(validation.messages ?? []),
+          ...validation.messages,
         ],
         stream: true,
       }),

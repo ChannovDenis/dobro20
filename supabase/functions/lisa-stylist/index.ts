@@ -152,11 +152,8 @@ serve(async (req) => {
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      console.error("[INTERNAL] Missing LOVABLE_API_KEY environment variable");
-      return new Response(
-        JSON.stringify({ error: "Сервис временно недоступен" }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.error("Missing API key");
+      throw new Error("Configuration error");
     }
 
     const systemPrompt = isStyleMode ? LISA_SYSTEM_PROMPT : `Ты — помощник Добросервис AI. Отвечай кратко и полезно. Используй 1-2 эмодзи. Если спрашивают про стиль, моду или одежду — переключись на роль стилиста Лизы.`;
@@ -171,7 +168,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          ...(validation.messages ?? []),
+          ...validation.messages,
         ],
         stream: true,
       }),

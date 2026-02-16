@@ -89,65 +89,6 @@
     --ring: 142 76% 36%;
     --glow-primary: 142 76% 36% / 0.4;
   }
-
-  /* ===== LIGHT THEME ===== */
-  .light {
-    --background: 0 0% 98%;
-    --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: 199 89% 48%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 220 14% 92%;
-    --secondary-foreground: 222 47% 11%;
-
-    --muted: 220 14% 92%;
-    --muted-foreground: 220 9% 46%;
-
-    --accent: 220 14% 92%;
-    --accent-foreground: 222 47% 11%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 13% 87%;
-    --input: 220 13% 87%;
-    --ring: 199 89% 48%;
-
-    /* Glass effect for light */
-    --glass-bg: 0 0% 100% / 0.7;
-    --glass-border: 220 13% 87% / 0.6;
-    --glass-blur: 20px;
-
-    /* Glow - subtle for light */
-    --glow-primary: 199 89% 48% / 0.15;
-    --glow-size: 40px;
-  }
-
-  /* Light theme tenant overrides */
-  .light[data-tenant="gpb"] {
-    --primary: 210 100% 35%;
-    --ring: 210 100% 35%;
-    --glow-primary: 210 100% 35% / 0.15;
-  }
-
-  .light[data-tenant="wb"] {
-    --primary: 280 80% 50%;
-    --ring: 280 80% 50%;
-    --glow-primary: 280 80% 50% / 0.15;
-  }
-
-  .light[data-tenant="dobro"] {
-    --primary: 142 76% 36%;
-    --ring: 142 76% 36%;
-    --glow-primary: 142 76% 36% / 0.15;
-  }
 }
 
 @layer base {
@@ -155,58 +96,9 @@
     @apply border-border;
   }
 
-  html, body, #root {
-    height: 100%;
-  }
-
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
-  }
-
-  /* Mobile shell — centers app in a phone-sized frame on desktop */
-  .mobile-shell {
-    max-width: 430px;
-    width: 100%;
-    height: 100%;
-    margin: 0 auto;
-    position: relative;
-    overflow: hidden;
-    background: hsl(var(--background));
-    /* Creates new containing block so position:fixed children stay inside */
-    transform: translateZ(0);
-  }
-
-  /* Outer background visible on desktop around the phone frame */
-  .desktop-backdrop {
-    min-height: 100%;
-    background: #0a0a0f;
-  }
-
-  /* On screens wider than 430px show a subtle phone bezel effect */
-  @media (min-width: 431px) {
-    .mobile-shell {
-      box-shadow:
-        0 0 0 1px hsl(var(--border)),
-        0 0 80px hsl(var(--glow-primary));
-      border-radius: 2rem;
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-      height: calc(100% - 2rem);
-      overflow-y: auto;
-    }
-  }
-
-  /* On actual mobile devices — no bezel, full screen */
-  @media (max-width: 430px) {
-    .mobile-shell {
-      max-width: 100%;
-      border-radius: 0;
-      overflow-y: auto;
-    }
-    .desktop-backdrop {
-      background: hsl(var(--background));
-    }
   }
 }
 

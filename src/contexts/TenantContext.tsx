@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { tenants as localTenants, TenantConfig } from '@/config/tenants';
 
 export interface TenantTheme {
   primary: string;
@@ -24,8 +23,6 @@ export interface Tenant {
   enabled_services: string[];
   quotas: TenantQuotas;
   is_active: boolean;
-  appTitle: string;
-  appSubtitle: string;
 }
 
 interface TenantContextValue {
@@ -38,63 +35,58 @@ interface TenantContextValue {
 
 const TenantContext = createContext<TenantContextValue | undefined>(undefined);
 
-const DEFAULT_TENANT_SLUG = 'default';
+const DEFAULT_TENANT_SLUG = 'dobro';
 
 // Apply tenant theme as CSS variables
 function applyThemeToDocument(theme: TenantTheme, slug: string) {
   const root = document.documentElement;
+  
+  // Set data attribute for CSS-based theming
   root.setAttribute('data-tenant', slug);
+  
+  // Set CSS variables from tenant theme
   root.style.setProperty('--tenant-primary', theme.primary);
   root.style.setProperty('--tenant-secondary', theme.secondary);
   root.style.setProperty('--tenant-accent', theme.accent);
+  
+  // Also update the main primary color to match tenant
   root.style.setProperty('--primary', theme.primary);
   root.style.setProperty('--ring', theme.primary);
   root.style.setProperty('--glow-primary', `${theme.primary} / 0.4`);
 }
+
+// Default theme and quotas for fallback
+const DEFAULT_THEME: TenantTheme = {
+  primary: "142 76% 36%",
+  secondary: "142 70% 95%",
+  accent: "142 76% 36%",
+};
 
 const DEFAULT_QUOTAS: TenantQuotas = {
   free_ai_messages: 100,
   free_expert_minutes: 30,
 };
 
-function buildTenantFromConfig(config: TenantConfig): Tenant {
-  const theme: TenantTheme = {
-    primary: config.accentColor,
-    secondary: `${config.accentColor.split(' ')[0]} 70% 95%`,
-    accent: config.accentColor,
-  };
-  return {
-    id: config.id,
-    slug: config.slug,
-    name: config.name,
-    logo_url: null,
-    ai_name: `${config.name} AI`,
-    welcome_text: 'Чем могу помочь?',
-    theme,
-    enabled_services: config.enabledServices,
-    quotas: DEFAULT_QUOTAS,
-    is_active: true,
-    appTitle: config.appTitle,
-    appSubtitle: config.appSubtitle,
-  };
-}
-
 export function TenantProvider({ children }: { children: React.ReactNode }) {
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Resolve tenant slug from URL params or subdomain
   const resolveTenantSlug = (): string => {
+    // Check URL param first: ?tenant=gpb
     const urlParams = new URLSearchParams(window.location.search);
     const paramSlug = urlParams.get('tenant');
     if (paramSlug) return paramSlug;
 
+    // Check subdomain: gpb.dobroservis.ru
     const hostname = window.location.hostname;
     const parts = hostname.split('.');
     if (parts.length >= 3 && parts[0] !== 'www') {
       return parts[0];
     }
 
+    // Default tenant
     return DEFAULT_TENANT_SLUG;
   };
 
@@ -102,40 +94,46 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     setError(null);
 
-    // First, resolve from local config
-    const localConfig = localTenants[slug] || localTenants[DEFAULT_TENANT_SLUG];
-    const localTenant = buildTenantFromConfig(localConfig);
-
     try {
-      // Try DB overlay (for tenants that exist in DB)
-      const dbSlug = slug === 'default' ? 'dobro' : slug;
+      // Use the public view that only exposes safe tenant information
       const { data, error: fetchError } = await supabase
         .from('public_tenant_info')
         .select('*')
-        .eq('slug', dbSlug)
+        .eq('slug', slug)
         .eq('is_active', true)
-        .maybeSingle();
+        .single();
 
-      if (data && !fetchError) {
-        const themeData = (data.theme as unknown as TenantTheme) || localTenant.theme;
-        const merged: Tenant = {
-          ...localTenant,
-          id: data.id || localTenant.id,
-          logo_url: data.logo_url,
-          ai_name: data.ai_name || localTenant.ai_name,
-          welcome_text: data.welcome_text || localTenant.welcome_text,
-          theme: themeData,
-        };
-        setTenant(merged);
-        applyThemeToDocument(merged.theme, localConfig.slug);
-      } else {
-        setTenant(localTenant);
-        applyThemeToDocument(localTenant.theme, localConfig.slug);
+      if (fetchError) {
+        // Fallback to default tenant
+        if (slug !== DEFAULT_TENANT_SLUG) {
+          console.warn(`Tenant "${slug}" not found, falling back to default`);
+          return fetchTenant(DEFAULT_TENANT_SLUG);
+        }
+        throw fetchError;
       }
+
+      const themeData = (data.theme as unknown as TenantTheme) || DEFAULT_THEME;
+
+      // Note: quotas and enabled_services are not exposed in public view for security
+      // They should be fetched via authenticated requests or edge functions when needed
+      const tenantData: Tenant = {
+        id: data.id,
+        slug: data.slug,
+        name: data.name,
+        logo_url: data.logo_url,
+        ai_name: data.ai_name || 'Добросервис AI',
+        welcome_text: data.welcome_text || 'Чем могу помочь?',
+        theme: themeData,
+        enabled_services: [], // Not exposed in public view
+        quotas: DEFAULT_QUOTAS, // Not exposed in public view
+        is_active: data.is_active,
+      };
+
+      setTenant(tenantData);
+      applyThemeToDocument(tenantData.theme, tenantData.slug);
     } catch (err) {
-      console.error('Failed to fetch tenant from DB, using local config:', err);
-      setTenant(localTenant);
-      applyThemeToDocument(localTenant.theme, localConfig.slug);
+      console.error('Failed to fetch tenant:', err);
+      setError('Не удалось загрузить конфигурацию');
     } finally {
       setIsLoading(false);
     }
@@ -146,10 +144,11 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
   };
 
   const isServiceEnabled = (serviceType: string): boolean => {
-    if (!tenant) return true;
-    return tenant.enabled_services.includes(serviceType);
+    // Allow all services for public view (quotas are enforced server-side)
+    return true;
   };
 
+  // Initial load
   useEffect(() => {
     const slug = resolveTenantSlug();
     fetchTenant(slug);

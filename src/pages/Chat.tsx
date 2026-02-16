@@ -1,21 +1,14 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { SuggestionTicker } from "@/components/chat/SuggestionTicker";
-import { TopicContextBar } from "@/components/chat/TopicContextBar";
-import { ExpertButton } from "@/components/chat/ExpertButton";
-import { DeleteTopicDialog } from "@/components/chat/DeleteTopicDialog";
-import { ClearMessagesDialog } from "@/components/chat/ClearMessagesDialog";
-import { RenameTopicDialog } from "@/components/chat/RenameTopicDialog";
 import { useChat } from "@/hooks/useChat";
-import { useTopics, Topic } from "@/hooks/useTopics";
 import { ChatAction } from "@/types/chat";
 import { useTenant } from "@/hooks/useTenant";
 import { getAssistant } from "@/constants/aiAssistants";
-import { toast } from "sonner";
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -26,80 +19,23 @@ export default function Chat() {
   const contextParam = searchParams.get("context");
   const promptParam = searchParams.get("prompt");
   const serviceParam = searchParams.get("service");
-  const topicIdParam = searchParams.get("topicId");
   const [context, setContext] = useState<string | null>(contextParam);
   
-  // Topics hook for DB integration
-  const { 
-    currentTopic, 
-    messages: topicMessages, 
-    setCurrentTopic,
-    selectTopic,
-    fetchTopics,
-    topics,
-    updateTopicTitle,
-    updateTopicStatus,
-    clearMessages: clearTopicMessages,
-    deleteTopic,
-  } = useTopics({ autoLoad: true });
-  
-  // Dialog states
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [clearDialogOpen, setClearDialogOpen] = useState(false);
-  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-  
-  // Handler for auto-created topic
-  const handleTopicAutoCreated = useCallback((newTopicId: string, newServiceType: string) => {
-    // Update URL with new topic
-    setSearchParams({ topicId: newTopicId, service: newServiceType });
-    // Refresh topics list
-    fetchTopics();
-  }, [setSearchParams, fetchTopics]);
-
   // Get the appropriate AI assistant based on service
-  const currentService = currentTopic?.service_type || serviceParam;
-  const assistant = getAssistant(currentService);
+  const assistant = getAssistant(serviceParam);
   const AssistantIcon = assistant.icon;
   
   const {
     messages,
     isLoading,
-    isLoadingHistory,
     isStyleMode,
     uploadedPhoto,
     sendMessage,
     handleAction,
     handleImageUpload,
     clearUploadedPhoto,
-    setServiceType,
-    setTopicId,
-  } = useChat(handleTopicAutoCreated);
+  } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Load topic from URL param on mount
-  useEffect(() => {
-    if (topicIdParam && topics.length > 0) {
-      const topic = topics.find(t => t.id === topicIdParam);
-      if (topic) {
-        selectTopic(topic);
-      }
-    }
-  }, [topicIdParam, topics, selectTopic]);
-
-  // Sync service type to chat hook
-  useEffect(() => {
-    if (currentService && setServiceType) {
-      setServiceType(currentService);
-    }
-  }, [currentService, setServiceType]);
-
-  // Sync topic ID to chat hook - use URL param directly for immediate loading
-  useEffect(() => {
-    const targetTopicId = currentTopic?.id || topicIdParam;
-    if (targetTopicId && setTopicId) {
-      setTopicId(targetTopicId);
-    }
-  }, [currentTopic?.id, topicIdParam, setTopicId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -117,17 +53,11 @@ export default function Chat() {
     sendMessage(text);
   };
 
-  const handleTopicCreated = (topicId: string, serviceType: string) => {
-    // Update URL with new topic
-    setSearchParams({ topicId, service: serviceType });
-    // Refresh topics list
-    fetchTopics();
-  };
-
   const hasMessages = messages.length > 0;
 
   const handleClose = () => {
-    navigate('/chats');
+    setSearchParams({});
+    navigate('/feed');
   };
 
   const clearContext = () => {
@@ -135,49 +65,14 @@ export default function Chat() {
     setSearchParams({});
   };
 
-  // Topic action handlers
-  const handleRename = async (newTitle: string) => {
-    if (currentTopic) {
-      await updateTopicTitle(currentTopic.id, newTitle);
-      toast.success("Чат переименован");
-    }
-  };
-
-  const handleClearMessages = async () => {
-    if (currentTopic) {
-      const success = await clearTopicMessages(currentTopic.id);
-      if (success) {
-        toast.success("Сообщения очищены");
-      }
-    }
-  };
-
-  const handleArchive = async () => {
-    if (currentTopic) {
-      const newStatus = currentTopic.status === 'archived' ? 'active' : 'archived';
-      await updateTopicStatus(currentTopic.id, newStatus);
-      toast.success(newStatus === 'archived' ? "Чат в архиве" : "Чат восстановлен");
-    }
-  };
-
-  const handleDelete = async () => {
-    if (currentTopic) {
-      const success = await deleteTopic(currentTopic.id);
-      if (success) {
-        toast.success("Чат удалён");
-        navigate('/chats');
-      }
-    }
-  };
-
   // Get AI name: service-specific > style mode > tenant config > default
   const aiName = isStyleMode 
     ? "Стилист Лиза" 
-    : (currentService ? assistant.name : (tenant?.ai_name || "Добро-ассистент"));
+    : (serviceParam ? assistant.name : (tenant?.ai_name || "Добро-ассистент"));
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      {/* Modal Header with close button and expert button */}
+      {/* Modal Header with close button */}
       <motion.header
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -188,7 +83,7 @@ export default function Chat() {
           onClick={handleClose}
           className="p-2 rounded-full text-muted-foreground hover:bg-accent transition-colors"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <X className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
           <AssistantIcon 
@@ -199,65 +94,13 @@ export default function Chat() {
             {aiName}
           </h1>
         </div>
-        {/* Expert button */}
-        <ExpertButton serviceId={currentService} />
+        <div className="w-9" /> {/* Spacer for centering */}
       </motion.header>
-
-      {/* Topic context bar */}
-      {currentTopic && (
-        <TopicContextBar 
-          topic={currentTopic} 
-          messageCount={messages.length}
-          onRename={() => setRenameDialogOpen(true)}
-          onClearMessages={() => setClearDialogOpen(true)}
-          onArchive={handleArchive}
-          onDelete={() => setDeleteDialogOpen(true)}
-        />
-      )}
-
-      {/* Dialogs */}
-      <DeleteTopicDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        topicTitle={currentTopic?.title || ""}
-        onConfirm={handleDelete}
-      />
-      <ClearMessagesDialog
-        open={clearDialogOpen}
-        onOpenChange={setClearDialogOpen}
-        onConfirm={handleClearMessages}
-      />
-      <RenameTopicDialog
-        open={renameDialogOpen}
-        onOpenChange={setRenameDialogOpen}
-        currentTitle={currentTopic?.title || ""}
-        onConfirm={handleRename}
-      />
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-24 flex flex-col">
-        {/* Loading history indicator */}
-        {isLoadingHistory && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-8 gap-3"
-          >
-            <div className="flex gap-1.5">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
-                  transition={{ delay: i * 0.15, repeat: Infinity, duration: 0.8 }}
-                  className="w-2.5 h-2.5 rounded-full bg-primary"
-                />
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">Загрузка истории...</p>
-          </motion.div>
-        )}
         {/* Context badge */}
-        {context && !isLoadingHistory && (
+        {context && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -275,7 +118,7 @@ export default function Chat() {
             </div>
           </motion.div>
         )}
-        {!hasMessages && !isLoadingHistory ? (
+        {!hasMessages ? (
           <div className="flex-1 flex flex-col items-center justify-center px-2">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -289,14 +132,14 @@ export default function Chat() {
                 <AssistantIcon className="w-6 h-6 text-white" />
               </div>
               <p className="text-muted-foreground text-sm">
-                {currentTopic ? `Тема: ${currentTopic.title}` : "Чем могу помочь?"}
+                Чем могу помочь?
               </p>
             </motion.div>
 
             {/* Suggestion ticker - service-specific or default */}
             <SuggestionTicker 
               onSuggestionClick={handleSuggestionClick} 
-              serviceId={currentService || undefined}
+              serviceId={serviceParam || undefined}
             />
           </div>
         ) : (
@@ -346,7 +189,6 @@ export default function Chat() {
         uploadedPhotoUrl={uploadedPhoto?.url}
         onClearPhoto={clearUploadedPhoto}
         initialPrompt={promptParam || undefined}
-        onTopicCreated={handleTopicCreated}
       />
     </div>
   );

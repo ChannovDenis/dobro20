@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Video, MessageSquare, Briefcase, Users, Calendar } from "lucide-react";
+import { ArrowLeft, Star, Phone, Video, MessageSquare, FileText, Briefcase, Users, Calendar } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { experts, services } from "@/data/mockData";
 import { cn } from "@/lib/utils";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { addDays, format, isToday, isTomorrow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { toast } from "sonner";
@@ -20,7 +20,6 @@ export default function ExpertDetail() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [consultationType, setConsultationType] = useState<ConsultationType>("online");
-  const [isBooking, setIsBooking] = useState(false);
 
   const serviceExperts = experts[id || ""] || [];
   const expert = serviceExperts.find(e => e.id === expertId);
@@ -47,10 +46,10 @@ export default function ExpertDetail() {
 
   const price = consultationType === "online" ? expert.price : (expert.priceChat || expert.price);
 
-  const handleBooking = useCallback(async () => {
-    if (!selectedTime || isBooking) return;
-    setIsBooking(true);
-
+  const handleBooking = () => {
+    if (!selectedTime) return;
+    
+    // Create booking object
     const booking: Booking = {
       id: crypto.randomUUID(),
       expertId: expert.id,
@@ -65,16 +64,19 @@ export default function ExpertDetail() {
       status: "upcoming",
       createdAt: new Date().toISOString(),
     };
-
-    await saveBooking(booking);
-
+    
+    // Save to localStorage
+    saveBooking(booking);
+    
+    // Show success toast
     toast.success(
       `Записано! Консультация ${format(selectedDate, "d MMMM", { locale: ru })} в ${selectedTime}`,
       { duration: 4000 }
     );
-
+    
+    // Navigate to history
     navigate("/history");
-  }, [selectedTime, isBooking, expert, id, service, selectedDate, consultationType, price, navigate]);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -151,14 +153,19 @@ export default function ExpertDetail() {
           </div>
         </div>
 
-        {/* Chat CTA */}
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={() => navigate(`/chat?service=${id}`)}
-            className="flex items-center gap-2 px-6 py-3 rounded-full glass text-primary hover:bg-secondary/30 transition-colors"
-          >
+        {/* Communication icons */}
+        <div className="flex justify-center gap-4 mt-6">
+          <button className="p-3 rounded-full glass text-muted-foreground hover:text-primary transition-colors">
+            <Phone className="w-5 h-5" />
+          </button>
+          <button className="p-3 rounded-full glass text-muted-foreground hover:text-primary transition-colors">
+            <Video className="w-5 h-5" />
+          </button>
+          <button className="p-3 rounded-full glass text-muted-foreground hover:text-primary transition-colors">
             <MessageSquare className="w-5 h-5" />
-            <span className="text-sm font-medium">Спросить AI-ассистента</span>
+          </button>
+          <button className="p-3 rounded-full glass text-muted-foreground hover:text-primary transition-colors">
+            <FileText className="w-5 h-5" />
           </button>
         </div>
       </motion.div>
@@ -283,10 +290,10 @@ export default function ExpertDetail() {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pt-8">
         <Button
           className="w-full h-14 text-base font-semibold"
-          disabled={!selectedTime || isBooking}
+          disabled={!selectedTime}
           onClick={handleBooking}
         >
-          {isBooking ? "Записываем..." : `Записаться · ${price}`}
+          Записаться · {price}
         </Button>
       </div>
     </div>
