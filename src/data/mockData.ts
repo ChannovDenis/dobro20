@@ -67,23 +67,14 @@ export interface UserProfile {
   subscriptionActive: boolean;
 }
 
-// Все услуги Добросервиса
+// 6 услуг Добросервиса (по оферте)
 export const services: Service[] = [
-  // AI-сервисы
-  { id: "assistant", name: "AI Ассистент", icon: "Bot", color: "assistant", description: "Универсальный AI-помощник по любым вопросам", aiEnabled: true },
-  { id: "stylist", name: "AI Стилист", icon: "Sparkles", color: "style", description: "Персональный подбор стиля и гардероба", aiEnabled: true },
-  { id: "garden", name: "Доброградка", icon: "Sprout", color: "garden", description: "Сезонные советы для сада и огорода", aiEnabled: true },
-  
-  // Консультации с экспертами
-  { id: "lawyer", name: "Юрист", icon: "Scale", color: "legal", description: "Консультации по любым юридическим вопросам" },
-  { id: "doctor", name: "Врач", icon: "Stethoscope", color: "health", description: "Медицинские консультации онлайн" },
-  { id: "psychologist", name: "Психолог", icon: "Brain", color: "psychology", description: "Поддержка ментального здоровья" },
-  { id: "finance", name: "Финансы", icon: "TrendingUp", color: "finance", description: "Планирование бюджета и инвестиций" },
-  { id: "wellness", name: "ЗОЖ", icon: "Heart", color: "wellness", description: "Здоровый образ жизни и питание" },
-  { id: "security", name: "Антимошенник", icon: "ShieldCheck", color: "security", description: "Защита от мошенников и проверка" },
-  { id: "vet", name: "Ветеринар", icon: "PawPrint", color: "vet", description: "Консультации для питомцев" },
-  { id: "realtor", name: "Недвижимость", icon: "Home", color: "legal", description: "Помощь с покупкой и арендой жилья" },
-  { id: "beauty", name: "Красота", icon: "Palette", color: "style", description: "Советы по уходу и косметологии" },
+  { id: "lawyer", name: "Юрист 24/7", icon: "Scale", color: "legal", description: "10 направлений, документы 24/7" },
+  { id: "telemedicine", name: "Телемедицина", icon: "Stethoscope", color: "health", description: "Врач 24/7, 24 направления" },
+  { id: "psychologist", name: "Психолог", icon: "Brain", color: "psychology", description: "Консультации, 5 сессий" },
+  { id: "finance", name: "Финконсультант", icon: "Wallet", color: "finance", description: "Кредиты, долги, финграмотность" },
+  { id: "veterinary", name: "Ветеринар", icon: "PawPrint", color: "vet", description: "AnimalPhone/VetPet 24/7" },
+  { id: "receipt-check", name: "Проверка чеков и смет", icon: "ScanSearch", color: "finance", description: "AI найдёт переплату", aiEnabled: true },
 ];
 
 export const miniApps: MiniApp[] = [
@@ -228,7 +219,21 @@ export const feedItems: FeedItem[] = [
     comments: 2341,
     shares: 4521,
   },
-  // 7th card - Service promo
+  // DobroSchyot promo
+  {
+    id: "scan-promo",
+    type: "service-promo",
+    title: "ДоброСчёт: проверь свой чек",
+    description: "AI сравнит цены с рыночными и покажет переплату. Бесплатно и анонимно",
+    image: "",
+    tags: ["Сервис", "Финансы"],
+    serviceId: "receipt-check",
+    ctaText: "Проверить чек",
+    likes: 0,
+    comments: 0,
+    shares: 0,
+  },
+  // Lawyer promo
   {
     id: "7",
     type: "service-promo",
@@ -419,7 +424,7 @@ export const experts: Record<string, Expert[]> = {
     { id: "2", name: "Мария Сидорова", specialty: "Семейное право", rating: 4.8, reviews: 189, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", price: "3000₽", priceChat: "2000₽", available: true, experience: "10 лет", consultations: 3100, nextSlot: "15:00", timeSlots: ["09:30", "12:00", "15:00", "17:30"], bio: "Семейный адвокат. Разводы, алименты, раздел имущества." },
     { id: "3", name: "Алексей Козлов", specialty: "Трудовое право", rating: 4.7, reviews: 156, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop", price: "2000₽", priceChat: "1200₽", available: false, experience: "8 лет", consultations: 1800, timeSlots: [], bio: "Юрист по трудовым спорам. Помогу с увольнением, зарплатой и трудовыми договорами." },
   ],
-  doctor: [
+  telemedicine: [
     { id: "1", name: "Елена Волкова", specialty: "Терапевт", rating: 4.9, reviews: 312, avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop", price: "1500₽", priceChat: "800₽", available: true, experience: "12 лет", consultations: 4500, nextSlot: "11:00", timeSlots: ["09:00", "11:00", "13:00", "15:00", "17:00"], bio: "Врач-терапевт высшей категории. Диагностика и лечение широкого спектра заболеваний." },
     { id: "2", name: "Дмитрий Новиков", specialty: "Кардиолог", rating: 4.8, reviews: 245, avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop", price: "2500₽", priceChat: "1500₽", available: true, experience: "18 лет", consultations: 6200, nextSlot: "14:30", timeSlots: ["10:30", "14:30", "16:00"], bio: "Кардиолог с многолетним опытом. Диагностика и лечение заболеваний сердца." },
   ],
@@ -436,12 +441,12 @@ export const userProfile: UserProfile = {
 };
 
 export const chatTemplates = [
-  { id: "1", text: "Помоги составить претензию на возврат товара", category: "Юрист" },
-  { id: "2", text: "Какие симптомы у простуды и как её лечить?", category: "Врач" },
+  { id: "1", text: "Помоги составить претензию на возврат товара", category: "Юрист 24/7" },
+  { id: "2", text: "Какие симптомы у простуды и как её лечить?", category: "Телемедицина" },
   { id: "3", text: "Как справиться с тревожностью?", category: "Психолог" },
-  { id: "4", text: "Как начать инвестировать с небольшой суммы?", category: "Финансы" },
-  { id: "5", text: "Составь план тренировок на неделю", category: "ЗОЖ" },
-  { id: "6", text: "Как проверить, что звонок не от мошенников?", category: "Безопасность" },
+  { id: "4", text: "Как начать инвестировать с небольшой суммы?", category: "Финконсультант" },
+  { id: "5", text: "Мою кошку укусил клещ, что делать?", category: "Ветеринар" },
+  { id: "6", text: "Хочу проверить чек из магазина на переплату", category: "Проверка чеков" },
 ];
 
 // Simplified quick actions for minimalist chat
@@ -456,16 +461,13 @@ export const contentCategories = ["Все", "ЗОЖ", "Право", "Финан�
 
 // SuperApp grid items for settings
 export const superAppItems = [
-  { id: "lawyer", name: "Юрист", icon: "Scale", color: "legal" },
-  { id: "doctor", name: "Врач", icon: "Heart", color: "health" },
+  { id: "lawyer", name: "Юрист 24/7", icon: "Scale", color: "legal" },
+  { id: "telemedicine", name: "Телемедицина", icon: "Stethoscope", color: "health" },
   { id: "psychologist", name: "Психолог", icon: "Brain", color: "psychology" },
-  { id: "finance", name: "Финансы", icon: "Wallet", color: "finance" },
-  { id: "wellness", name: "ЗОЖ", icon: "Dumbbell", color: "wellness" },
-  { id: "security", name: "Безопасность", icon: "Shield", color: "security" },
-  { id: "vet", name: "Ветеринар", icon: "Dog", color: "vet" },
-  { id: "stylist", name: "Стилист", icon: "Sparkles", color: "style" },
-  { id: "documents", name: "Документы", icon: "FileText", color: "legal" },
-  { id: "calculator", name: "Калькулятор", icon: "Calculator", color: "finance" },
+  { id: "finance", name: "Финконсультант", icon: "Wallet", color: "finance" },
+  { id: "veterinary", name: "Ветеринар", icon: "PawPrint", color: "vet" },
+  { id: "receipt-check", name: "Проверка чеков", icon: "ScanSearch", color: "finance" },
   { id: "assistant", name: "Ассистент", icon: "Bot", color: "assistant" },
+  { id: "stylist", name: "Стилист", icon: "Sparkles", color: "style" },
   { id: "settings", name: "Настройки", icon: "Settings", color: "muted" },
 ];

@@ -15,6 +15,7 @@ import MiniApp from "./pages/MiniApp";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import History from "./pages/History";
+import Scan from "./pages/Scan";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/history" element={<History />} />
             <Route path="/services" element={<Services />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/scan" element={<Scan />} />
             <Route path="/service/:id" element={<ServiceDetail />} />
             <Route path="/service/:id/expert/:expertId" element={<ExpertDetail />} />
             <Route path="/mini-app/:id" element={<MiniApp />} />

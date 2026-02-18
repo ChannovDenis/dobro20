@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { 
-  Scale, Heart, Brain, Wallet, Dumbbell, Shield, 
-  Dog, Sparkles, FileText, Calculator, Bot, Settings,
+import {
+  Scale, Heart, Brain, Wallet, Stethoscope, PawPrint, ScanSearch,
+  Sparkles, Bot, Settings,
   ChevronRight, Crown, Bell, Gift, TrendingUp, Zap,
-  CreditCard, QrCode, Percent, Star, ArrowRight, X, Sprout, Clock
+  CreditCard, Percent, Star, ArrowRight, X, Clock
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Scale, Heart, Brain, Wallet, Dumbbell, Shield, Dog, Sparkles, FileText, Calculator, Bot, Settings, Sprout,
+  Scale, Heart, Brain, Wallet, Stethoscope, PawPrint, ScanSearch, Sparkles, Bot, Settings,
 };
 
 // Featured promotions (business value)
@@ -38,18 +38,23 @@ const promotions = [
 
 // Quick actions (user value)
 const quickActions = [
-  { id: "scan", icon: QrCode, label: "Сканер", color: "primary" },
+  { id: "scan", icon: ScanSearch, label: "Чек-сканер", color: "finance" },
   { id: "pay", icon: CreditCard, label: "Оплата", color: "finance" },
   { id: "cashback", icon: Percent, label: "Кэшбэк", color: "wellness" },
   { id: "bonus", icon: Star, label: "Бонусы", color: "style" },
 ];
 
-// Service categories
+// AI assistants (separate from offer services)
+const aiAssistants = [
+  { id: "assistant", name: "AI-ассистент", icon: Zap, description: "Ответит на любой вопрос", path: "/chat", gradient: true },
+  { id: "stylist", name: "Стилист Лиза", icon: Sparkles, description: "Подбор стиля и гардероба", path: "/chat?service=stylist", gradient: false },
+];
+
+// Service categories (6 services from offer)
 const categories = [
-  { id: "seasonal", label: "🌱 Сезонное", services: ["garden"] },
-  { id: "popular", label: "Популярное", services: ["lawyer", "doctor", "psychologist"] },
-  { id: "finance", label: "Финансы", services: ["finance", "security"] },
-  { id: "lifestyle", label: "Образ жизни", services: ["wellness", "stylist", "vet"] },
+  { id: "popular", label: "Популярное", services: ["lawyer", "telemedicine", "psychologist"] },
+  { id: "finance", label: "Финансы", services: ["finance", "receipt-check"] },
+  { id: "pets", label: "Питомцы", services: ["veterinary"] },
 ];
 
 export default function Services() {
@@ -62,16 +67,16 @@ export default function Services() {
   const handleQuickAction = (id: string) => {
     switch (id) {
       case "scan":
-        toast.info("🔍 Сканер QR-кодов скоро будет доступен");
+        navigate("/scan");
         break;
       case "pay":
-        toast.info("💳 Раздел оплаты в разработке");
+        toast.info("Раздел оплаты в разработке");
         break;
       case "cashback":
-        toast.info("💰 Кэшбэк-программа запускается скоро");
+        toast.info("Кэшбэк-программа запускается скоро");
         break;
       case "bonus":
-        toast.info("⭐ Бонусная программа скоро");
+        toast.info("Бонусная программа скоро");
         break;
     }
   };
@@ -80,7 +85,7 @@ export default function Services() {
     e.stopPropagation();
     switch (id) {
       case "premium":
-        toast.success("🎉 Премиум активирован на 30 дней!");
+        toast.success("Премиум активирован на 30 дней!");
         break;
       case "referral":
         if (navigator.share) {
@@ -91,18 +96,22 @@ export default function Services() {
           });
         } else {
           navigator.clipboard.writeText(window.location.origin);
-          toast.success("📋 Ссылка скопирована!");
+          toast.success("Ссылка скопирована!");
         }
         break;
     }
   };
 
   const handleBellClick = () => {
-    toast.info("🔔 У вас пока нет новых уведомлений");
+    toast.info("У вас пока нет новых уведомлений");
   };
 
-  const handleCategoryAll = (categoryId: string) => {
-    toast.info(`📂 Раздел "${categoryId}" скоро будет доступен`);
+  const handleServiceClick = (serviceId: string) => {
+    if (serviceId === "receipt-check") {
+      navigate("/scan");
+    } else {
+      navigate(`/service/${serviceId}`);
+    }
   };
 
   return (
@@ -117,8 +126,8 @@ export default function Services() {
           >
             <X className="w-5 h-5" />
           </button>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex items-center gap-3"
@@ -132,7 +141,7 @@ export default function Services() {
               <h1 className="text-sm font-bold text-foreground">{userProfile.name.split(" ")[0]}</h1>
             </div>
           </motion.div>
-          
+
           <div className="flex items-center gap-2">
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -173,8 +182,8 @@ export default function Services() {
                   <div className="p-2 rounded-xl bg-white/20">
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={(e) => handlePromoAction(promo.id, e)}
                     className="bg-white/20 hover:bg-white/30 text-white border-0 rounded-full text-xs"
                   >
@@ -217,25 +226,101 @@ export default function Services() {
         </div>
       </section>
 
-      {/* AI Assistant promo */}
-      <section className="px-4 py-4">
+      {/* AI Assistants — separate section */}
+      <section className="px-4 py-4 space-y-2">
+        {aiAssistants.map((ai, index) => {
+          const Icon = ai.icon;
+          return (
+            <motion.div
+              key={ai.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate(ai.path)}
+              className="glass-card p-4 flex items-center gap-4 cursor-pointer"
+            >
+              <div className={cn(
+                "w-14 h-14 rounded-2xl flex items-center justify-center",
+                ai.gradient ? "gradient-primary glow" : "bg-category-style"
+              )}>
+                <Icon className={cn("w-7 h-7", ai.gradient ? "text-primary-foreground" : "text-category-style")} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-foreground">{ai.name}</h3>
+                <p className="text-sm text-muted-foreground">{ai.description}</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground" />
+            </motion.div>
+          );
+        })}
+      </section>
+
+      {/* DobroSchyot card */}
+      <section className="px-4 py-2">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => navigate("/chat")}
+          onClick={() => navigate("/scan")}
           className="glass-card p-4 flex items-center gap-4 cursor-pointer"
         >
-          <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center glow">
-            <Zap className="w-7 h-7 text-primary-foreground" />
+          <div className="w-14 h-14 rounded-2xl bg-category-finance flex items-center justify-center">
+            <ScanSearch className="w-7 h-7 text-category-finance" />
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-foreground">AI-ассистент</h3>
-            <p className="text-sm text-muted-foreground">Ответит на любой вопрос за секунды</p>
+            <h3 className="font-bold text-foreground">Проверка чеков и смет</h3>
+            <p className="text-sm text-muted-foreground">AI найдёт переплату за 10 секунд</p>
           </div>
           <ArrowRight className="w-5 h-5 text-muted-foreground" />
         </motion.div>
       </section>
+
+      {/* Service categories (6 services from offer) */}
+      {categories.map((category, catIndex) => (
+        <section key={category.id} className="px-4 py-3">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: catIndex * 0.1 }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-muted-foreground">{category.label}</h2>
+            </div>
+
+            <div className="flex gap-3 overflow-x-auto no-scrollbar">
+              {category.services.map((serviceId, index) => {
+                const service = services.find(s => s.id === serviceId);
+                if (!service) return null;
+
+                const IconComponent = iconMap[service.icon] || Bot;
+
+                return (
+                  <motion.button
+                    key={service.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleServiceClick(service.id)}
+                    className="flex-shrink-0 glass-card p-4 w-[140px] text-left"
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center mb-3",
+                      `bg-category-${service.color}`
+                    )}>
+                      <IconComponent className={cn("w-5 h-5", `text-category-${service.color}`)} />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground">{service.name}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{service.description}</p>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </section>
+      ))}
 
       {/* History card */}
       <section className="px-4 py-2">
@@ -257,57 +342,6 @@ export default function Services() {
           <ArrowRight className="w-5 h-5 text-muted-foreground" />
         </motion.div>
       </section>
-
-      {/* Service categories */}
-      {categories.map((category, catIndex) => (
-        <section key={category.id} className="px-4 py-3">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: catIndex * 0.1 }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-muted-foreground">{category.label}</h2>
-              <button 
-                onClick={() => handleCategoryAll(category.id)}
-                className="text-xs text-primary font-medium"
-              >
-                Все
-              </button>
-            </div>
-            
-            <div className="flex gap-3 overflow-x-auto no-scrollbar">
-              {category.services.map((serviceId, index) => {
-                const service = services.find(s => s.id === serviceId);
-                if (!service) return null;
-                
-                const IconComponent = iconMap[service.icon] || Bot;
-                
-                return (
-                  <motion.button
-                    key={service.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => navigate(`/service/${service.id}`)}
-                    className="flex-shrink-0 glass-card p-4 w-[140px] text-left"
-                  >
-                    <div className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center mb-3",
-                      `bg-category-${service.color}`
-                    )}>
-                      <IconComponent className={cn("w-5 h-5", `text-category-${service.color}`)} />
-                    </div>
-                    <h3 className="text-sm font-semibold text-foreground">{service.name}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{service.description}</p>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </motion.div>
-        </section>
-      ))}
 
       {/* Stats / Achievements (engagement) */}
       <section className="px-4 py-4">

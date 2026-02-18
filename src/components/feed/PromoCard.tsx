@@ -13,6 +13,10 @@ export function PromoCard({ item, isActive }: PromoCardProps) {
   const navigate = useNavigate();
 
   const handleClick = () => {
+    if (item.serviceId === "receipt-check") {
+      navigate("/scan");
+      return;
+    }
     if (item.type === "service-promo" && item.serviceId) {
       navigate(`/service/${item.serviceId}`);
     } else if (item.type === "miniapp-promo" && item.miniAppId) {
@@ -29,13 +33,17 @@ export function PromoCard({ item, isActive }: PromoCardProps) {
 
   return (
     <div className="relative h-[100dvh] w-full snap-start snap-always flex-shrink-0">
-      {/* Background Image with stronger overlay */}
+      {/* Background Image or gradient fallback */}
       <div className="absolute inset-0">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="w-full h-full object-cover"
-        />
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={item.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/20 via-background to-primary/10" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/40" />
       </div>
 
